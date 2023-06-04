@@ -4,26 +4,183 @@ author: "Daniel Fredin, Junhan Li, & Eric Chen"
 output: pdf_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r include=FALSE, echo=FALSE}
+# Libraries
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(splitstackshape)
+library(readr)
+library(car)
+library(lmtest)
+library(rcompanion)
+library(olsrr)
+library(kableExtra)
+library(caret)
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
-```{r cars}
-summary(cars)
+# Problem 1
+
+```{r include=FALSE, echo=FALSE}
+glass <- read.csv("glass.csv")
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+
+
+
+# Problem 3
+
+## a)
+```{r include=FALSE, echo=FALSE}
+Handout1 <- read.csv("Handout 1.csv")
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r include=FALSE, echo=FALSE}
+# Convert COMMIT to binary < median = 0, otherwise = 1.
+
+new_Handout1 <- Handout1 %>%
+  mutate(COMMIT = case_when(
+    (COMMIT < median(COMMIT)) ~ 0,
+    TRUE ~ 1))
+
+# Select only the continuous numerical variables
+new_Handout1 <- new_Handout1 %>%
+  select(COMMIT, AGE, SALARY, CLASSSIZE, RESOURCES, AUTONOMY, CLIMATE, SUPPORT)
+
+
+# Training and testing method
+set.seed(123)
+# Create training and testing data
+index <- createDataPartition(new_Handout1$COMMIT, 
+                             p = 0.8, 
+                             list = FALSE,
+                             times=1)
+
+
+new_Handout1 <- as.data.frame(new_Handout1)
+
+train  <- new_Handout1[index, ]
+test <- new_Handout1[-index, ]
+
+train$COMMIT[train$COMMIT==1] <- "yes"
+train$COMMIT[train$COMMIT==0] <- "no"
+
+test$COMMIT[test$COMMIT==1] <- "yes"
+test$COMMIT[test$COMMIT==0] <- "no"
+
+
+# Convert outcome variable to factor for each data frame
+train$COMMIT <- as.factor(train$COMMIT)
+test$COMMIT <- as.factor(test$COMMIT)
+
+```
+
+
+### ii) 10-fold Cross-Validation
+
+
+```{r}
+# 10-fold Cross-validation method
+ctrlspecs <- trainControl(method="cv", 
+                          number=10, 
+                          savePredictions="all",
+                          classProbs=TRUE)
+
+set.seed(1234)
+cvmodel <- train(COMMIT ~ .,  
+                 data=train, 
+                 method="glm", 
+                 family = "binomial",  
+                 trControl=ctrlspecs)
+summary(cvmodel)
+
+# results1 <- data.frame( R2 = R2(predictions, test$COMMIT),
+#             RMSE = RMSE(predictions, test$COMMIT),
+#             MAE = MAE(predictions, test$COMMIT))
+# # Results for 10-fold Cross-validation method
+# results1
+
+# Model for 10-fold Cross-validation method
+print(cvmodel)
+varImp(cvmodel)
+```
+
+
+```{r}
+# Predict outcome using model from training data based on testing data
+predictions <- predict(cvmodel, newdata=test)
+
+# Create confusion matrix to assess model fit/performance on test data
+con_matx <- confusionMatrix(data=predictions, test$COMMIT)
+con_matx
+
+```
+
+
+## b)
+
+
+
+
+
+
+## c)
+
+```{r}
+compute_weibull_stats <- function(shape, scale) {
+  # Compute the mean
+  mean_value <- scale * gamma(1 + (1/shape))
+  
+  
+  # # Compute the median
+  # median_value <- scale * qweibull(0.5, shape, scale)
+  
+  
+  # Compute the median
+  median_value <- scale * (log(2)^(1/shape))
+  
+  
+  # Compute the mode
+  if (shape > 1)
+    mode_value <- scale * ((shape - 1) / shape)^(1/shape)
+  else
+    mode_value <- 0
+  
+  # Compute the variance
+  variance_value <- scale^2 * (gamma(1 + (2/shape)) - (gamma(1 + (1/shape)))^2)
+  
+  # Return the computed statistics as a named list
+  return(list(mean = mean_value, median = median_value, mode = mode_value, variance = variance_value))
+}
+
+# lambda = scale
+# K = shape
+
+# Example usage
+scale_param <- 6
+shape_param <- 1
+
+stats <- compute_weibull_stats(shape_param, scale_param)
+
+# Accessing the computed statistics
+mean_value <- stats$mean
+median_value <- stats$median
+mode_value <- stats$mode
+variance_value <- stats$variance
+
+# Printing the computed statistics
+cat("Mean:", mean_value, "\n")
+cat("Median:", median_value, "\n")
+cat("Mode:", mode_value, "\n")
+cat("Variance:", variance_value, "\n")
+
+```
+
+
+
+
