@@ -40,6 +40,9 @@ glass <- read.csv("glass.csv")
 Handout1 <- read.csv("Handout 1.csv")
 ```
 
+
+### ii) 10-fold Cross-Validation
+
 ```{r include=FALSE, echo=FALSE}
 # Convert COMMIT to binary < median = 0, otherwise = 1.
 
@@ -78,13 +81,6 @@ test$COMMIT[test$COMMIT==0] <- "no"
 train$COMMIT <- as.factor(train$COMMIT)
 test$COMMIT <- as.factor(test$COMMIT)
 
-```
-
-
-### ii) 10-fold Cross-Validation
-
-
-```{r}
 # 10-fold Cross-validation method
 ctrlspecs <- trainControl(method="cv", 
                           number=10, 
@@ -97,7 +93,7 @@ cvmodel <- train(COMMIT ~ .,
                  method="glm", 
                  family = "binomial",  
                  trControl=ctrlspecs)
-summary(cvmodel)
+
 
 # results1 <- data.frame( R2 = R2(predictions, test$COMMIT),
 #             RMSE = RMSE(predictions, test$COMMIT),
@@ -106,10 +102,13 @@ summary(cvmodel)
 # results1
 
 # Model for 10-fold Cross-validation method
+summary(cvmodel)
 print(cvmodel)
 varImp(cvmodel)
+
 ```
 
+### Model Accuracy
 
 ```{r}
 # Predict outcome using model from training data based on testing data
@@ -155,7 +154,10 @@ compute_weibull_stats <- function(shape, scale) {
   variance_value <- scale^2 * (gamma(1 + (2/shape)) - (gamma(1 + (1/shape)))^2)
   
   # Return the computed statistics as a named list
-  return(list(mean = mean_value, median = median_value, mode = mode_value, variance = variance_value))
+  return(list(mean = mean_value, 
+              median = median_value, 
+              mode = mode_value, 
+              variance = variance_value))
 }
 
 # lambda = scale
@@ -181,6 +183,78 @@ cat("Variance:", variance_value, "\n")
 
 ```
 
+### Maximum likelihood estimator (MLE) of the parameters from the Weibull distribution
+
+Maximum Likelihood Estimator (MLE) of $\sigma$ from the normal distribution assuming $\mu$ is constant.
 
 
+### Step 1: Probability Density Function for a normal distribution.
 
+
+$$
+\Large f(x;\lambda,k) = 
+\begin{cases}
+  \Large\frac{k}{\lambda}\left(\frac{x}{\lambda}\right)^{k-1}  e^{-\left(\frac{x}{\lambda}\right)^k}  , & x \ge 0\\
+  \Large0, &x < 0
+\end{cases}
+$$
+
+
+### Step 2: The likelihood function (L).
+
+
+$$
+\begin{aligned}
+ \Large L_{\hat{x}}(\lambda,k) &= \Large \prod_{i=1}^{n} \frac{k}{\lambda}\left(\frac{x_i}{\lambda}\right)^{k-1}  e^{-\left(\frac{x_i}{\lambda}\right)^k} \\
+ &= \Large\left(\frac{k}{\lambda}\right)^n    \left(\frac{1}{\lambda^{k-1}}\right)^n    \left(\prod_{i=1}^{n}x_i^{k-1}\right)    \left(e^{-\sum\limits_{i=1}^{n}\left(\frac{x_i}{\lambda}\right)^k}\right)  \\
+ &=\Large \frac{k^n}{\lambda^{nk}}    e^{-\sum\limits_{i=1}^{n}\left(\frac{x_i}{\lambda}\right)^k}    \prod_{i=1}^{n}x_i^{k-1}    
+\end{aligned}
+$$
+
+
+### Step 3: The log-likelihood function (ln(L)).
+
+
+$$
+\begin{aligned}
+\Large \ln L_{\hat{x}}(\lambda,k) &= \Large n\ln(k) - nk\ln(\lambda) - \sum\limits_{i=1}^{n}\left(\frac{x_i}{\lambda}\right)^k + (k-1)\sum\limits_{i=1}^{n}\ln x_i
+\end{aligned}
+$$
+
+
+### Step 4: Derivative of the log-likelihood function (ln(L)).
+
+
+$$
+\begin{aligned}
+\frac{d \ln L}{d \sigma^2} &= \frac{d}{d \sigma^2} {\left(-\frac{n}{2}\ln{(2\pi)} - \frac{n}{2}\ln{(\sigma^2)} -\frac{1}{2\sigma^2}\sum\limits_{i=1}^{n}{(x_i - \mu)^2}\right)} \\
+&= -\frac{n}{2\sigma^2} - {\left[  \frac{1}{2}\sum\limits_{i=1}^{n}{(x_i - \mu)^2}\right]}\frac{d}{d \sigma^2}\left(\frac{1}{\sigma^2}\right) \\
+&= -\frac{n}{2\sigma^2} - {\left[  \frac{1}{2}\sum\limits_{i=1}^{n}{(x_i - \mu)^2}\right]}\left(-\frac{1}{(\sigma^2)^2} \right) \\
+&= \frac{1}{2\sigma^2}\left[ \frac{1}{\sigma^2}\sum\limits_{i=1}^{n}{(x_i - \mu)^2} -n \right]
+\end{aligned}
+$$
+
+
+### Step 5: Solving for the desired parameter.
+
+
+$$
+\begin{aligned}
+\frac{d \ln L}{d \sigma^2} &= 0 \\
+\frac{d \ln L}{d \sigma^2} &= \frac{1}{2\sigma^2}\left[ \frac{1}{\sigma^2}\sum\limits_{i=1}^{n}{(x_i - \mu)^2} -n \right] = 0 \\
+&=  \frac{1}{\sigma^2}\sum\limits_{i=1}^{n}{(x_i - \mu)^2} -n  = 0 \\
+&= \frac{1}{n}\sum\limits_{i=1}^{n}{(x_i - \mu)^2} = \sigma^2 \\
+\end{aligned}
+$$
+
+Therefore the estimator $\hat{\sigma}$ is equal to the unadjusted sample variance.
+
+$$
+\hat{\sigma} = \sqrt{\frac{1}{n}\sum\limits_{i=1}^{n}{(x_i - \hat{\mu})^2}}
+$$
+
+Since $\hat{\mu}= \bar{x}$ then the estimator $\hat{\sigma}$ is equal to,
+
+$$
+\hat{\sigma} = \sqrt{\frac{1}{n}\sum\limits_{i=1}^{n}{(x_i - \bar{x})^2}}
+$$
