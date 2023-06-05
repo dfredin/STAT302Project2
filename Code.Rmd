@@ -125,9 +125,6 @@ con_matx
 
 
 
-
-
-
 ## c)
 
 ```{r}
@@ -216,9 +213,7 @@ $$
 
 
 $$
-\begin{aligned}
-\Large \ln L_{\hat{x}}(\lambda,k) &= \Large n\ln(k) - nk\ln(\lambda) - \sum\limits_{i=1}^{n}\left(\frac{x_i}{\lambda}\right)^k + (k-1)\sum\limits_{i=1}^{n}\ln x_i
-\end{aligned}
+\Large \ln L_{\hat{x}}(\lambda,k) = \Large n\ln(k) - nk\ln(\lambda) - \sum\limits_{i=1}^{n}\left(\frac{x_i}{\lambda}\right)^k + (k-1)\sum\limits_{i=1}^{n}\ln x_i
 $$
 
 
@@ -226,35 +221,57 @@ $$
 
 
 $$
+\large \frac{d \ln L_{\hat{x}}(\lambda,k)}{d \lambda} = \Large -\frac{nk}{\lambda} + k\sum\limits_{i=1}^{n} \frac{x_i^k}{\lambda^{k+1}}
+$$
+
+
+```{r}
+# MAYBE COMBINE STEP 4 AND 5!!!!!!!!!!!!!!
+```
+
+
+
+### Step 5: Solving for the desired parameters.
+
+
+<!-- $$ -->
+<!-- \begin{alignat}{2} -->
+<!-- \large \frac{d \ln L_{\hat{x}}(\lambda,k)}{d \lambda} &= \Large -\frac{nk}{\lambda} + k\sum\limits_{i=1}^{n} \frac{x_i^k}{\lambda^{k+1}} &&= \Large0 \\ -->
+<!--  &= \Large -\frac{nk}{\lambda} + \frac{k}{\lambda}\sum\limits_{i=1}^{n}\left(\frac{x_i}{\lambda}\right)^k && = \Large0 \\ -->
+<!--  &= \Large - n +\sum\limits_{i=1}^{n}\frac{x_i^k}{\lambda^k} &&= \Large 0 \\ -->
+<!--  &= \Large \frac{1}{\lambda^k} \sum\limits_{i=1}^{n}x_i^k &&= \Large n \\ -->
+<!--  &= \Large \frac{1}{n} \sum\limits_{i=1}^{n}x_i^k &&= \Large \lambda^k  -->
+<!-- \end{alignat} -->
+<!-- $$ -->
+
+Therefore the estimator $\hat{\lambda}$ is:
+
+$$
+\Large \hat{\lambda} = \Large \left( \frac{1}{n} \sum\limits_{i=1}^{n}x_i^k \right)^\frac{1}{k}
+$$
+
+
+
+
+
+
+Plugging in $\hat{\lambda}$ into the log-likelihood function (ln(L)) and then differentiating with respect to $k$:
+
+
+$$
 \begin{aligned}
-\frac{d \ln L}{d \sigma^2} &= \frac{d}{d \sigma^2} {\left(-\frac{n}{2}\ln{(2\pi)} - \frac{n}{2}\ln{(\sigma^2)} -\frac{1}{2\sigma^2}\sum\limits_{i=1}^{n}{(x_i - \mu)^2}\right)} \\
-&= -\frac{n}{2\sigma^2} - {\left[  \frac{1}{2}\sum\limits_{i=1}^{n}{(x_i - \mu)^2}\right]}\frac{d}{d \sigma^2}\left(\frac{1}{\sigma^2}\right) \\
-&= -\frac{n}{2\sigma^2} - {\left[  \frac{1}{2}\sum\limits_{i=1}^{n}{(x_i - \mu)^2}\right]}\left(-\frac{1}{(\sigma^2)^2} \right) \\
-&= \frac{1}{2\sigma^2}\left[ \frac{1}{\sigma^2}\sum\limits_{i=1}^{n}{(x_i - \mu)^2} -n \right]
+\large \frac{d \ln L_{\hat{x}}(\lambda,k)}{d k} &= \Large \frac{d}{dk} \left[ n\ln(k) - nk\ln(\lambda) - \sum\limits_{i=1}^{n}\left(\frac{x_i}{\lambda}\right)^k + (k-1)\sum\limits_{i=1}^{n}\ln x_i \right] \\
+&= x
 \end{aligned}
 $$
 
 
-### Step 5: Solving for the desired parameter.
 
 
-$$
-\begin{aligned}
-\frac{d \ln L}{d \sigma^2} &= 0 \\
-\frac{d \ln L}{d \sigma^2} &= \frac{1}{2\sigma^2}\left[ \frac{1}{\sigma^2}\sum\limits_{i=1}^{n}{(x_i - \mu)^2} -n \right] = 0 \\
-&=  \frac{1}{\sigma^2}\sum\limits_{i=1}^{n}{(x_i - \mu)^2} -n  = 0 \\
-&= \frac{1}{n}\sum\limits_{i=1}^{n}{(x_i - \mu)^2} = \sigma^2 \\
-\end{aligned}
-$$
 
-Therefore the estimator $\hat{\sigma}$ is equal to the unadjusted sample variance.
 
-$$
-\hat{\sigma} = \sqrt{\frac{1}{n}\sum\limits_{i=1}^{n}{(x_i - \hat{\mu})^2}}
-$$
+Therefore the estimator $\hat{k}$ is:
 
-Since $\hat{\mu}= \bar{x}$ then the estimator $\hat{\sigma}$ is equal to,
 
-$$
-\hat{\sigma} = \sqrt{\frac{1}{n}\sum\limits_{i=1}^{n}{(x_i - \bar{x})^2}}
-$$
+
+
