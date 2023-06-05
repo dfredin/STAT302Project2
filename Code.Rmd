@@ -182,10 +182,9 @@ cat("Variance:", variance_value, "\n")
 
 ### Maximum likelihood estimator (MLE) of the parameters from the Weibull distribution
 
-Maximum Likelihood Estimator (MLE) of $\sigma$ from the normal distribution assuming $\mu$ is constant.
 
 
-### Step 1: Probability Density Function for a normal distribution.
+Probability Density Function $(f(x;\lambda,k))$ for the Weibull distribution:
 
 
 $$
@@ -197,7 +196,7 @@ $$
 $$
 
 
-### Step 2: The likelihood function (L).
+The likelihood function $(L_{\hat{x}}(\lambda,k))$:
 
 
 $$
@@ -209,7 +208,7 @@ $$
 $$
 
 
-### Step 3: The log-likelihood function (ln(L)).
+The log-likelihood function $(\ln L_{\hat{x}}(\lambda,k))$:
 
 
 $$
@@ -217,32 +216,26 @@ $$
 $$
 
 
-### Step 4: Derivative of the log-likelihood function (ln(L)).
+Partial derivative of the log-likelihood function with respect to $\lambda$:
 
 
 $$
-\large \frac{d \ln L_{\hat{x}}(\lambda,k)}{d \lambda} = \Large -\frac{nk}{\lambda} + k\sum\limits_{i=1}^{n} \frac{x_i^k}{\lambda^{k+1}}
+\large \frac{\partial \ln L_{\hat{x}}(\lambda,k)}{\partial \lambda} = \Large -\frac{nk}{\lambda} + k\sum\limits_{i=1}^{n} \frac{x_i^k}{\lambda^{k+1}}
 $$
 
 
-```{r}
-# MAYBE COMBINE STEP 4 AND 5!!!!!!!!!!!!!!
-```
+Solving for the desired parameter of $\lambda$ by setting the partial derivative equal to zero:
 
-
-
-### Step 5: Solving for the desired parameters.
-
-
-<!-- $$ -->
-<!-- \begin{alignat}{2} -->
-<!-- \large \frac{d \ln L_{\hat{x}}(\lambda,k)}{d \lambda} &= \Large -\frac{nk}{\lambda} + k\sum\limits_{i=1}^{n} \frac{x_i^k}{\lambda^{k+1}} &&= \Large0 \\ -->
-<!--  &= \Large -\frac{nk}{\lambda} + \frac{k}{\lambda}\sum\limits_{i=1}^{n}\left(\frac{x_i}{\lambda}\right)^k && = \Large0 \\ -->
-<!--  &= \Large - n +\sum\limits_{i=1}^{n}\frac{x_i^k}{\lambda^k} &&= \Large 0 \\ -->
-<!--  &= \Large \frac{1}{\lambda^k} \sum\limits_{i=1}^{n}x_i^k &&= \Large n \\ -->
-<!--  &= \Large \frac{1}{n} \sum\limits_{i=1}^{n}x_i^k &&= \Large \lambda^k  -->
-<!-- \end{alignat} -->
-<!-- $$ -->
+$$
+\begin{aligned}
+\large \frac{\partial \ln L_{\hat{x}}(\lambda,k)}{\partial \lambda} &= \Large 0 \\
+\Large -\frac{nk}{\lambda} + k\sum\limits_{i=1}^{n} \frac{x_i^k}{\lambda^{k+1}} &= \Large0 \\
+\Large -\frac{nk}{\lambda} + \frac{k}{\lambda}\sum\limits_{i=1}^{n}\left(\frac{x_i}{\lambda}\right)^k & = \Large0 \\
+\Large - n +\sum\limits_{i=1}^{n}\frac{x_i^k}{\lambda^k} &= \Large 0 \\
+\Large \frac{1}{\lambda^k} \sum\limits_{i=1}^{n}x_i^k &= \Large n \\
+\Large \frac{1}{n} \sum\limits_{i=1}^{n}x_i^k &= \Large \lambda^k
+\end{aligned}
+$$
 
 Therefore the estimator $\hat{\lambda}$ is:
 
@@ -255,23 +248,36 @@ $$
 
 
 
-Plugging in $\hat{\lambda}$ into the log-likelihood function (ln(L)) and then differentiating with respect to $k$:
+Plugging in $\hat{\lambda}$ into the log-likelihood function $(\ln L_{\hat{x}}(\lambda,k))$ and then differentiating with respect to $k$ in order to find the estimator $\hat{k}$:
 
 
 $$
 \begin{aligned}
-\large \frac{d \ln L_{\hat{x}}(\lambda,k)}{d k} &= \Large \frac{d}{dk} \left[ n\ln(k) - nk\ln(\lambda) - \sum\limits_{i=1}^{n}\left(\frac{x_i}{\lambda}\right)^k + (k-1)\sum\limits_{i=1}^{n}\ln x_i \right] \\
-&= x
+\large \frac{\partial \ln L_{\hat{x}}(\lambda,k)}{\partial k} &= \Large \frac{\partial}{\partial k} \left[ n\ln k - nk\ln \lambda - \sum\limits_{i=1}^{n}\left(\frac{x_i}{\lambda}\right)^k + (k-1)\sum\limits_{i=1}^{n}\ln x_i \right] \\
+&= \Large \frac{\partial}{\partial k} \left[ n\ln k - nk\ln\left[ \left( \frac{1}{n} \sum\limits_{i=1}^{n}x_i^k \right)^\frac{1}{k}  \right] - \frac{\sum\limits_{i=1}^{n}x_i^k}{\left[ \left( \frac{1}{n} \sum\limits_{i=1}^{n}x_i^k \right)^\frac{1}{k} \right]^k} + (k-1)\sum\limits_{i=1}^{n}\ln x_i \right] \\
+&= \Large \frac{\partial}{\partial k} \left[ n\ln k - \frac{nk}{k}\ln\left( \frac{1}{n} \sum\limits_{i=1}^{n}x_i^k \right) - \frac{\sum\limits_{i=1}^{n}x_i^k}{\left( \frac{1}{n} \sum\limits_{i=1}^{n}x_i^k \right)} + (k-1)\sum\limits_{i=1}^{n}\ln x_i \right] \\
+&= \Large \frac{\partial}{\partial k} \left[ n\ln k - n\ln\left( \frac{1}{n} \sum\limits_{i=1}^{n}x_i^k \right) - n + (k-1)\sum\limits_{i=1}^{n}\ln x_i \right] \\
+&= \Large \frac{n}{k} - \left( \frac{n\sum\limits_{i=1}^{n}x_i^k\ln{x_i}}{\sum\limits_{i=1}^{n}x_i^k} \right) + \sum\limits_{i=1}^{n}\ln x_i \\
+&= \Large \frac{1}{k} - \left( \frac{\sum\limits_{i=1}^{n}x_i^k\ln{x_i}}{\sum\limits_{i=1}^{n}x_i^k} \right) + \frac{1}{n}\sum\limits_{i=1}^{n}\ln x_i
+\end{aligned}
+$$
+
+
+Solving for the desired parameter of $k$ by setting the partial derivative equal to zero:
+
+$$
+\begin{aligned}
+\large \frac{\partial \ln L_{\hat{x}}(\lambda,k)}{\partial k} &= \Large 0 \\
+\Large \frac{1}{k} - \left( \frac{\sum\limits_{i=1}^{n}x_i^k\ln{x_i}}{\sum\limits_{i=1}^{n}x_i^k} \right) + \frac{1}{n}\sum\limits_{i=1}^{n}\ln x_i &= \Large 0 \\
+\Large  \left( \frac{\sum\limits_{i=1}^{n}x_i^k\ln{x_i}}{\sum\limits_{i=1}^{n}x_i^k} \right) - \frac{1}{n}\sum\limits_{i=1}^{n}\ln x_i&= \Large \frac{1}{k}
 \end{aligned}
 $$
 
 
 
-
-
-
 Therefore the estimator $\hat{k}$ is:
 
-
-
+$$
+\Large \hat{k} = \left[ \Large \frac{\sum\limits_{i=1}^{n}x_i^k\ln{x_i}}{\sum\limits_{i=1}^{n}x_i^k}  - \frac{1}{n}\sum\limits_{i=1}^{n}\ln x_i \right]^{-1}
+$$
 
