@@ -30,13 +30,16 @@ library(quadprog)
 glass <- read.csv("glass.csv")
 ```
 
-# Test 
+initial assumptions
+# Test 1
 ```{r include=T, echo=T}
-
+boxplot(glass$Si)
+```
+# Test 2
+```{r include=T, echo=T}
 glass <- subset(glass, glass$Si<74)
 glass <- subset(glass, glass$Si>71.5)
 boxplot(glass$Si)
-
 ```
 - response variable will be (Si)
 
@@ -57,7 +60,7 @@ head(glass_new)
 
 ```{r include=TRUE, echo=TRUE}
 # We will first check for the normality of dependent variable
-shapiro.test(new_glass$Si)
+shapiro.test(glass$Si)
 ```
 
 
@@ -98,19 +101,27 @@ shapiro.test(residuals(glass_model3))
 par(mfrow = c(2,2))
 plot(glass_model3)
 
-hist(glass$Si)
 ```
+After we have take the square root of the dpendent variable Si, we can 
+
+
 
 - select the best competing model for statistical analyses
-
-```{r include=FALSE, echo=FALSE}
+```{r include=T, echo=T}
 summary(glass_model1)
 summary(glass_model2)
 summary(glass_model3)
 #. AIC 
+
+compareLM(glass_model1, glass_model2, glass_model3)
 ```
 - Argue your choice
 - Perform optimization in R, compute the regression coefficients
+
+The lower the value for AIC, the better the fit of the model. The absolute value of the AIC value is not important. It can be positive or negative.
+
+Preconlcusion: Model 2 is a lost better. 
+
 
 # Part (c) Use result of best model, answer following questions
 (i): Explain coefficient of determination
@@ -529,4 +540,3 @@ Therefore the estimator $\hat{k}$ is:
 $$
 \Large \hat{k} = \left[ \Large \frac{\sum\limits_{i=1}^{n}x_i^k\ln{x_i}}{\sum\limits_{i=1}^{n}x_i^k}  - \frac{1}{n}\sum\limits_{i=1}^{n}\ln x_i \right]^{-1}
 $$
-
