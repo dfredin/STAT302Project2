@@ -30,19 +30,37 @@ library(quadprog)
 glass <- read.csv("glass.csv")
 ```
 
-initial assumptions
-# Test 1
+Initial assumptions
+  - Dependent variable should be approximately normally distributed
+  - Variables should related to each other linear - use a matrix scatterplot
+  - There should be no significant outliers - Kept at minimum
+
+# Test 1 Remove some outliers
 ```{r include=T, echo=T}
 boxplot(glass$Si)
+outliers <- boxplot.stats(glass$Si)$out
+max(outliers)
+min(outliers)
+glass <- subset(glass, glass$Si<74)
+glass <- subset(glass, glass$Si != max(outliers))
+
+boxplot(glass$Si)
+max(boxplot.stats(glass$Si)$out)
 ```
-# Test 2
+# Test 2 Remove all outliers(Currently our best option)
 ```{r include=T, echo=T}
 glass <- subset(glass, glass$Si<74)
 glass <- subset(glass, glass$Si>71.5)
 boxplot(glass$Si)
 ```
-- response variable will be (Si)
 
+
+# Test 3: Use matrix scatterplot to show that the variables related to each others linearly 
+
+
+
+
+- response variable will be (Si)
 # Part (a)
 - Select four variables of my choice
 ```{r include=FALSE, echo=FALSE}
