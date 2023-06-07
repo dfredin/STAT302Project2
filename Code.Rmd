@@ -41,39 +41,23 @@ boxplot(glass$Si)
 outliers <- boxplot.stats(glass$Si)$out
 max(outliers)
 min(outliers)
+glass <- subset(glass, glass$Si<74)
+glass <- subset(glass, glass$Si != max(outliers))
 
-new_glass1 <- subset(glass, glass$Si<74)
-new_glass1 <- subset(new_glass1, glass$Si != max(outliers))
-
-boxplot(new_glass1$Si)
-max(boxplot.stats(new_glass1$Si)$out)
+boxplot(glass$Si)
+max(boxplot.stats(glass$Si)$out)
 ```
 # Test 2 Remove all outliers(Currently our best option)
 ```{r include=T, echo=T}
-new_glass2 <- subset(glass, glass$Si<74)
-new_glass2 <- subset(new_glass2, new_glass2$Si>71.5)
-boxplot(new_glass2$Si)
+glass <- subset(glass, glass$Si<74)
+glass <- subset(glass, glass$Si>71.5)
+boxplot(glass$Si)
 ```
 
 
 # Test 3: Use matrix scatterplot to show that the variables related to each others linearly 
 
 
-
-
-# Test 4: Check histogram for normality
-
-```{r}
-hist(glass$Si)
-```
-
-```{r}
-hist(new_glass1$Si)
-```
-
-```{r}
-hist(new_glass2$Si)
-```
 
 
 - response variable will be (Si)
@@ -97,6 +81,7 @@ head(glass_new)
 shapiro.test(glass$Si)
 ```
 
+
   - 2 Paragraphs
     - why we choose variables
     - what you see from graph
@@ -108,22 +93,10 @@ We will first check for the normality of dependent variable
 ```{r include=TRUE, echo=TRUE}
 # We will first check for the normality of dependent variable
 shapiro.test(glass$Si)
-
-shapiro.test(2^(glass$Si))
-
-shapiro.test(sqrt(glass$Si))
-
-shapiro.test(sqrt(max(glass$Si+1) - glass$Si))
-
-shapiro.test(log(glass$Si))
-
 ```
 Since the shapiro test gives us a p-value 2.175e-09, which is less than 0.05,
 we will need to take the square root of our dependent variable to make it
 normal. 
-
-
-I dont think we need to transform data since no transformation actual gets us to < 0.05. I think at this point we need to do non-parametric test.
 
 # Factor data directly
 ```{r include=TRUE, echo=TRUE}
@@ -135,20 +108,23 @@ shapiro.test(residuals(glass_model1))
 par(mfrow = c(2,2))
 plot(glass_model1)
 
-glass_model2 <- lm(sqrt(Si)  ~ RI + factor(type) + Na  , data = glass)
+glass_model2 <- lm(sqrt(Si)  ~ RI + factor(type) + Na , data = glass)
 shapiro.test(residuals(glass_model2))
 par(mfrow = c(2,2))
 plot(glass_model2)
 
+mutate_glass <- glass %>%
+  mutate(type= case_when(
+    type %in% ("Head") ~ "Head",
+    TRUE ~ "All Other types"))
 
-glass_model3 <- lm(sqrt(Si)  ~ RI + factor(type) + Fe  , data = glass)
+glass_model3 <- lm(sqrt(Si)  ~ Na + Mg + Al + K + Ca + Ba + Fe + type , data = mutate_glass)
 shapiro.test(residuals(glass_model3))
 par(mfrow = c(2,2))
 plot(glass_model3)
 
 ```
 After we have take the square root of the dpendent variable Si, we can 
-
 
 
 - select the best competing model for statistical analyses
@@ -160,7 +136,63 @@ summary(glass_model3)
 
 compareLM(glass_model1, glass_model2, glass_model3)
 ```
-- Argue your choice
+
+
+# k cross-validation method
+```{r include=T, echo=T}
+glass_model1 <- lm(Si ~., data = glass)
+predictions <- glass_model1 %>% predict(glass)
+data.frame( R2 = R2(predictions, glass$Si),
+            RMSE = RMSE(predictions, glass$Si),
+            MAE = MAE(predictions, glass$Si))
+
+
+glass_model2 <- lm(Si  ~ RI + factor(type) + Na , data = glass)
+predictions <- glass_model2 %>% predict(glass)
+data.frame( R2 = R2(predictions, glass$Si),
+            RMSE = RMSE(predictions, glass$Si),
+            MAE = MAE(predictions, glass$Si))
+
+# model 3 will use training
+set.seed(123)
+training <- glass$Si %>%
+    createDataPartition(p = 0.8, list = FALSE)
+train.data  <- glass[training, ]
+test.data <- glass[-training, ]
+
+glass_model3 <- lm(Si ~., data = train.data)
+predictions <- glass_model3 %>% predict(test.data)
+data.frame( R2 = R2(predictions, test.data$Si),
+            RMSE = RMSE(predictions, test.data$Si),
+            MAE = MAE(predictions, test.data$Si))
+
+# varImp(glass_model3)
+
+
+# model 4 will use k-cross validation
+ctrl <- trainControl(method = "cv", number = 10)
+glass_model4 <- train(Si ~ ., data = glass, method = "lm", trControl = ctrl)
+print(glass_model4)
+
+
+
+# model 5 will use repeated k-cross validation
+ctrl_repeat <- trainControl(method = "repeatedcv", number = 10,  repeats = 3)
+glass_model5 <- train(Si ~ Na + Mg + Al + K + Ca + Ba + Fe + type, data = glass, 
+                      method = "lm", trControl = ctrl_repeat)
+print(glass_model5)
+
+par(mfrow = c(2,2))
+plot(glass_model1)
+
+par(mfrow = c(2,2))
+plot(glass_model2)
+
+par(mfrow = c(2,2))
+plot(glass_model3)
+```
+
+Argue your choice
 - Perform optimization in R, compute the regression coefficients
 
 The lower the value for AIC, the better the fit of the model. The absolute value of the AIC value is not important. It can be positive or negative.
@@ -178,14 +210,14 @@ Preconlcusion: Model 2 is a lost better.
   - the four tests
   - four plots group together
 
-# Part (d): separate observations into 
+# Par(d): separate observations into 
 - group 1: type = WinF
 - group 2: type= WonNF
 Variable A1, level alpha = 0.1 
 
 
 
-# Part (e): perform simulation analysis
+# Par(e):
 
 
 
@@ -197,6 +229,8 @@ Variable A1, level alpha = 0.1
 Handout1 <- read.csv("Handout 1.csv")
 ```
 
+### i)
+We choose to use 10-cross validation. Why we choose it 
 
 ### ii) 10-fold Cross-Validation
 
