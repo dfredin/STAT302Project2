@@ -41,23 +41,39 @@ boxplot(glass$Si)
 outliers <- boxplot.stats(glass$Si)$out
 max(outliers)
 min(outliers)
-glass <- subset(glass, glass$Si<74)
-glass <- subset(glass, glass$Si != max(outliers))
 
-boxplot(glass$Si)
-max(boxplot.stats(glass$Si)$out)
+new_glass1 <- subset(glass, glass$Si<74)
+new_glass1 <- subset(new_glass1, glass$Si != max(outliers))
+
+boxplot(new_glass1$Si)
+max(boxplot.stats(new_glass1$Si)$out)
 ```
 # Test 2 Remove all outliers(Currently our best option)
 ```{r include=T, echo=T}
-glass <- subset(glass, glass$Si<74)
-glass <- subset(glass, glass$Si>71.5)
-boxplot(glass$Si)
+new_glass2 <- subset(glass, glass$Si<74)
+new_glass2 <- subset(new_glass2, new_glass2$Si>71.5)
+boxplot(new_glass2$Si)
 ```
 
 
 # Test 3: Use matrix scatterplot to show that the variables related to each others linearly 
 
 
+
+
+# Test 4: Check histogram for normality
+
+```{r}
+hist(glass$Si)
+```
+
+```{r}
+hist(new_glass1$Si)
+```
+
+```{r}
+hist(new_glass2$Si)
+```
 
 
 - response variable will be (Si)
@@ -81,7 +97,6 @@ head(glass_new)
 shapiro.test(glass$Si)
 ```
 
-
   - 2 Paragraphs
     - why we choose variables
     - what you see from graph
@@ -93,10 +108,22 @@ We will first check for the normality of dependent variable
 ```{r include=TRUE, echo=TRUE}
 # We will first check for the normality of dependent variable
 shapiro.test(glass$Si)
+
+shapiro.test(2^(glass$Si))
+
+shapiro.test(sqrt(glass$Si))
+
+shapiro.test(sqrt(max(glass$Si+1) - glass$Si))
+
+shapiro.test(log(glass$Si))
+
 ```
 Since the shapiro test gives us a p-value 2.175e-09, which is less than 0.05,
 we will need to take the square root of our dependent variable to make it
 normal. 
+
+
+I dont think we need to transform data since no transformation actual gets us to < 0.05. I think at this point we need to do non-parametric test.
 
 # Factor data directly
 ```{r include=TRUE, echo=TRUE}
@@ -151,14 +178,14 @@ Preconlcusion: Model 2 is a lost better.
   - the four tests
   - four plots group together
 
-# Par(d): separate observations into 
+# Part (d): separate observations into 
 - group 1: type = WinF
 - group 2: type= WonNF
 Variable A1, level alpha = 0.1 
 
 
 
-
+# Part (e): perform simulation analysis
 
 
 
