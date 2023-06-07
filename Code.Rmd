@@ -209,6 +209,8 @@ Argue your choice
 The lower the value for AIC, the better the fit of the model. The absolute value of the AIC value is not important. It can be positive or negative.
 
 Preconlcusion: Model 2 is a lost better. 
+Based on the RMSE values we generated for the four mdoels above, the model 3
+where we used 70% training data model is our best model
 
 
 # Part (c) Use result of best model, answer following questions
