@@ -41,17 +41,16 @@ boxplot(glass$Si)
 outliers <- boxplot.stats(glass$Si)$out
 max(outliers)
 min(outliers)
-glass <- subset(glass, glass$Si<74)
-glass <- subset(glass, glass$Si != max(outliers))
+glass_filtered <- subset(glass, glass$Si != max(outliers))
 
-boxplot(glass$Si)
-max(boxplot.stats(glass$Si)$out)
+boxplot(glass_filtered$Si)
+max(boxplot.stats(glass_filtered$Si)$out)
 ```
 # Test 2 Remove all outliers(Currently our best option)
 ```{r include=T, echo=T}
-glass <- subset(glass, glass$Si<74)
-glass <- subset(glass, glass$Si>71.5)
-boxplot(glass$Si)
+glass_filtered <- subset(glass, glass$Si<74)
+glass_filtered <- subset(glass_filtered, glass$Si>71.5)
+boxplot(glass_filtered$Si)
 ```
 
 
@@ -62,17 +61,31 @@ boxplot(glass$Si)
 
 - response variable will be (Si)
 # Part (a)
+
+
+```{r}
+cor(glass[,c("Si", "RI", "Na", "Mg", "Al", "K", "Ca", "Ba", "Fe")])
+```
+
+```{r}
+ggplot(data=glass, aes(x=type, y=Si)) + 
+  geom_boxplot()
+```
+
+
 - Select four variables of my choice
-```{r include=FALSE, echo=FALSE}
+```{r include=True, echo=FALSE}
 glass_new <- glass %>%
   # COMMIT,AGE, SALARY, CLIMATE, SUPPORT
-  select(RI, Si, Fe, type)
+  select(Si, RI, Ca, type)
 head(glass_new)
 ```
 - use visualization plot to tell a story, making use the variables selected
 - Using color,faceting, theme in ggplot2
 ```{r include=TRUE, echo=TRUE}
-# Show values of 
+ggplot(data= glass_new, aes(x=RI, y= Si, color = type)) +
+  geom_point()+
+  facet_wrap(~type)
 ```
 
 
@@ -138,33 +151,38 @@ compareLM(glass_model1, glass_model2, glass_model3)
 ```
 
 
-# k cross-validation method
-```{r include=T, echo=T}
+# Training and testing / k cross-validation method
+```{r include=T, echo=T} 
+set.seed(123)
+# Regular linear regression with all variables
 glass_model1 <- lm(Si ~., data = glass)
 predictions <- glass_model1 %>% predict(glass)
-data.frame( R2 = R2(predictions, glass$Si),
+results <- data.frame( R2 = R2(predictions, glass$Si),
             RMSE = RMSE(predictions, glass$Si),
             MAE = MAE(predictions, glass$Si))
+results
 
-
+# Regular linear regression with 3 variables
 glass_model2 <- lm(Si  ~ RI + factor(type) + Na , data = glass)
 predictions <- glass_model2 %>% predict(glass)
-data.frame( R2 = R2(predictions, glass$Si),
+results <- data.frame( R2 = R2(predictions, glass$Si),
             RMSE = RMSE(predictions, glass$Si),
             MAE = MAE(predictions, glass$Si))
+results
 
-# model 3 will use training
-set.seed(123)
+# Training and testing method (SEEMS LIKE OUR BEST MODEL)
 training <- glass$Si %>%
-    createDataPartition(p = 0.8, list = FALSE)
+    createDataPartition(p = .75, list = FALSE)
 train.data  <- glass[training, ]
 test.data <- glass[-training, ]
 
 glass_model3 <- lm(Si ~., data = train.data)
 predictions <- glass_model3 %>% predict(test.data)
-data.frame( R2 = R2(predictions, test.data$Si),
+results <- data.frame( R2 = R2(predictions, test.data$Si),
             RMSE = RMSE(predictions, test.data$Si),
             MAE = MAE(predictions, test.data$Si))
+results
+
 
 # varImp(glass_model3)
 
@@ -178,18 +196,11 @@ print(glass_model4)
 
 # model 5 will use repeated k-cross validation
 ctrl_repeat <- trainControl(method = "repeatedcv", number = 10,  repeats = 3)
-glass_model5 <- train(Si ~ Na + Mg + Al + K + Ca + Ba + Fe + type, data = glass, 
+glass_model5 <- train(Si ~ ., data = glass, 
                       method = "lm", trControl = ctrl_repeat)
 print(glass_model5)
 
-par(mfrow = c(2,2))
-plot(glass_model1)
 
-par(mfrow = c(2,2))
-plot(glass_model2)
-
-par(mfrow = c(2,2))
-plot(glass_model3)
 ```
 
 Argue your choice
@@ -202,22 +213,96 @@ Preconlcusion: Model 2 is a lost better.
 
 # Part (c) Use result of best model, answer following questions
 (i): Explain coefficient of determination
+```{r}
+results[1]
+```
+
+
 (ii): Find Least-squares estimates: Basically Regression
-  - 
+```{r}
+summary(glass_model3)
+```
+
+
+
 (iii): Interpret slopes and intercept of the problem
   - determine the significant predictors at 10% level of significance
+  
+  
+  
+  
 (iv): Perform Residual analysis 
   - the four tests
   - four plots group together
+  
+```{r}
+par(mfrow = c(2,2))
+plot(glass_model1)
 
-# Par(d): separate observations into 
+par(mfrow = c(2,2))
+plot(glass_model2)
+
+par(mfrow = c(2,2))
+plot(glass_model3)
+
+par(mfrow = c(2,2))
+plot(glass_model4)
+
+par(mfrow = c(2,2))
+plot(glass_model5)
+
+```
+
+
+
+# Part (d): separate observations into 
 - group 1: type = WinF
 - group 2: type= WonNF
 Variable A1, level alpha = 0.1 
 
 
+```{r}
+# Assuming your dataset is named 'data' and the variable of interest is 'Al'
+group1 <- subset(glass, type == "WinF")$Al
+group2 <- subset(glass, type == "WinNF")$Al
 
-# Par(e):
+# Perform a t-test: If the distribution of the variable Al follows a normal distribution, use a t-test to compare the means of the two groups
+ttest_result <- t.test(group1, group2)
+ttest_result
+
+p_value <- ttest_result$p.value
+
+# Interpret the t-test results
+if (p_value < 0.1) {
+  cat("The distributions of the two groups are significantly different at the 0.10 significance level.")
+} else {
+  cat("The distributions of the two groups are not significantly different at the 0.10 significance level.")
+}
+
+```
+
+```{r}
+# Perform a non-parametric test: If the distribution of Al is not normal, use a non-parametric test, such as the Wilcoxon-Mann-Whitney test, to compare the medians of the two groups
+
+shapiro.test(glass$Al)
+
+
+wilcox_result <- wilcox.test(group1, group2)
+wilcox_result
+p_value <- wilcox_result$p.value
+
+if (p_value < 0.1) {
+  cat("The distributions of the two groups are significantly different at the 0.10 significance level.")
+} else {
+  cat("The distributions of the two groups are not significantly different at the 0.10 significance level.")
+}
+
+```
+
+
+
+
+# Part (e):
 
 
 
