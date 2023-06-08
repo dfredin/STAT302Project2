@@ -74,7 +74,7 @@ ggplot(data=glass, aes(x=type, y=Si)) +
 
 
 - Select four variables of my choice
-```{r include=True, echo=FALSE}
+```{r include=TRUE, echo=FALSE}
 glass_new <- glass %>%
   # COMMIT,AGE, SALARY, CLIMATE, SUPPORT
   select(Si, RI, Ca, type)
