@@ -78,13 +78,6 @@ Based on our visualization, it is evident that there exists a moderately negativ
 # We will first check for the normality of dependent variable
 shapiro.test(glass$Si)
 ```
-We choose the variable RI (refractive index) and Si as our x and y axis to
-illustrate their correlations.  
-
-  - 2 Paragraphs
-    - why we choose variables
-    - what you see from graph
-    
 
 <!-- # Part (b-e) Version 1 -->
 
@@ -151,12 +144,17 @@ illustrate their correlations.
 <!-- compareLM(glass_model1, glass_model2, glass_model3) -->
 <!-- ``` -->
 
-```{r}
-boxplot(glass$Si)
-```
+
 
 
 ## Part (b) 
+
+```{r}
+# We will first check for the normality of dependent variable
+shapiro.test(glass$Si)
+boxplot(glass$Si)
+```
+
 
 ```{r} 
 set.seed(123)
@@ -219,6 +217,44 @@ The lower the value for AIC, the better the fit of the model. The absolute value
 Preconlcusion: Model 3 is a lot better. 
 Based on the RMSE values we generated for the three models above, the model 3
 where we used 75% training data model is our best model
+
+
+
+```{r}
+# Optimization of our best model
+min.RSS <- function(data, par) {
+              with(data, sum((par[1] + par[2] * Na + par[3] * Mg + par[4] * Al 
+                              + par[5] * K + par[6] * Ca + par[7] * Ba + par[8] * Fe - Si)^2))
+}
+
+result <- optim(par = c(98, -1, -1, -1, -1, -1, -1, 0.5), 
+                fn = min.RSS, 
+                data = train.data)
+result$par
+
+glass_model3$coefficients
+
+```
+
+```{r}
+# Fit the final model with the optimized coefficients
+final_model <- lm(Si ~ Na + Mg + Al + K + Ca + Ba + Fe, data = train.data)
+
+# Extract the optimized coefficients
+optimized_coefficients <- result$par
+
+# Update the coefficients of the final model with the optimized coefficients
+final_model$coefficients <- optimized_coefficients
+
+# Test final model
+predictions <- final_model %>% predict(test.data)
+final_model_results <- data.frame( R2 = R2(predictions, test.data$Si),
+            RMSE = RMSE(predictions, test.data$Si),
+            MAE = MAE(predictions, test.data$Si))
+final_model_results
+```
+
+
 
 
 ## Part (c) 
