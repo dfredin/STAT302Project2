@@ -811,3 +811,5 @@ Therefore the estimator $\hat{k}$ is:
 $$
 \Large \hat{k} = \left[ \Large \frac{\sum\limits_{i=1}^{n}x_i^k\ln{x_i}}{\sum\limits_{i=1}^{n}x_i^k}  - \frac{1}{n}\sum\limits_{i=1}^{n}\ln x_i \right]^{-1}
 $$
+
+The definition of $\hat{k}$ provided here is implicit, as determining the value of $k$ typically requires numerical methods for solution.
