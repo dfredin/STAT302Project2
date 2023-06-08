@@ -170,15 +170,15 @@ model1_results
 summary(glass_model1)
 
 
-# # Regular linear regression with 3 variables
-# glass_model2 <- lm(Si  ~ RI + factor(type) + Na , data = glass)
-# predictions <- glass_model2 %>% predict(glass)
-# results <- data.frame( R2 = R2(predictions, glass$Si),
-#             RMSE = RMSE(predictions, glass$Si),
-#             MAE = MAE(predictions, glass$Si))
-# results
+ # Regular linear regression with 3 variables
+ glass_model2 <- lm(Si  ~ RI + factor(type) + Na , data = glass)
+ predictions <- glass_model2 %>% predict(glass)
+ results <- data.frame( R2 = R2(predictions, glass$Si),
+             RMSE = RMSE(predictions, glass$Si),
+             MAE = MAE(predictions, glass$Si))
+ results
 
-# Training and testing method (SEEMS LIKE OUR BEST MODEL)
+# Training and testing method (SEEMS LIKE OUR BEST MODEL BECAUSE OF LOWER RMSE)
 training <- glass$Si %>%
     createDataPartition(p = .75, list = FALSE)
 train.data  <- glass[training, ]
@@ -196,18 +196,18 @@ model3_results
 varImp(glass_model3)
 
 
-# # model 4 will use k-cross validation
-# ctrl <- trainControl(method = "cv", number = 10)
-# glass_model4 <- train(Si ~ ., data = glass, method = "lm", trControl = ctrl)
-# print(glass_model4)
-# 
-# 
-# 
-# # model 5 will use repeated k-cross validation
-# ctrl_repeat <- trainControl(method = "repeatedcv", number = 10,  repeats = 3)
-# glass_model5 <- train(Si ~ ., data = glass, 
-#                       method = "lm", trControl = ctrl_repeat)
-# print(glass_model5)
+ # model 4 will use k-cross validation
+ ctrl <- trainControl(method = "cv", number = 10)
+ glass_model4 <- train(Si ~ ., data = glass, method = "lm", trControl = ctrl)
+ print(glass_model4)
+ 
+ 
+ 
+ # model 5 will use repeated k-cross validation
+ ctrl_repeat <- trainControl(method = "repeatedcv", number = 10,  repeats = 3)
+ glass_model5 <- train(Si ~ ., data = glass, 
+                       method = "lm", trControl = ctrl_repeat)
+ print(glass_model5)
 
 
 ```
@@ -228,7 +228,7 @@ where we used 70% training data model is our best model
 RMSE <- model3_results[1]
 RMSE
 ```
-
+This coefficient of determination suggests that 98.47% of the variation in Si content could be explained by variables of our best model.
 
 (ii): Find Least-squares estimates: Basically Regression
 ```{r}
@@ -244,7 +244,7 @@ $$
 \end{aligned}
 $$
 
-All of them are significant predictors.
+All of the variables in our best model are significant predictors of Si content at 10% confidence. This regression equation suggests that when none of the critical elements are present in the glass, 98.81% of the material will be Si The negative slopes in the equation means that an increase of the presence of any other element by one percent will decrease the Si content of the glass by roughly one percent, which makes sense. However, the exception is Fe, which only decreases Si content by 0.35% for every one percent change.
 
 
 (iv): Perform Residual analysis 
@@ -261,7 +261,6 @@ raintest(glass_model3)
 
 
 # Check for normality of glass_model3 using shapiro test on residuals
-
 # (This predicts residuals on training data)
 real_resid <- residuals(glass_model3)
 shapiro.test(real_resid) # violated 
@@ -279,7 +278,7 @@ ols_test_breusch_pagan(glass_model3) # violated
 
 ols_plot_resid_stud(glass_model3) # OUTLIER!!!!
 ```
-
+Based on the rainbow test on our model, the linearity assumption is not violated, as the null hypothesis of a linear fit is not rejected (p > 0.05). However, the results of a Shapiro test on the residuals of the model conclude they are not normal, as p < 0.05 here. Heteroscedasticity is also present in the residuals, as is an outlier. Thus, the assumptions on residuals of regression models do not hold.
 
 # Part (d): separate observations into 
 - group 1: type = WinF
