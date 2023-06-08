@@ -26,53 +26,20 @@ library(quadprog)
 
 
 # Problem 1
+
+## Testing 
 ```{r include=T, echo=T}
 glass <- read.csv("glass.csv")
 ```
 
-Initial assumptions
-  - Dependent variable should be approximately normally distributed
-  - Variables should related to each other linear - use a matrix scatterplot
-  - There should be no significant outliers - Kept at minimum
-
-# Test 1 Remove some outliers
-```{r include=T, echo=T}
-boxplot(glass$Si)
-outliers <- boxplot.stats(glass$Si)$out
-max(outliers)
-min(outliers)
-glass_filtered <- subset(glass, glass$Si != max(outliers))
-
-boxplot(glass_filtered$Si)
-max(boxplot.stats(glass_filtered$Si)$out)
-```
-# Test 2 Remove all outliers(Currently our best option)
-```{r include=T, echo=T}
-glass_filtered <- subset(glass, glass$Si<74)
-glass_filtered <- subset(glass_filtered, glass$Si>71.5)
-boxplot(glass_filtered$Si)
-```
-
-
-# Test 3: Use matrix scatterplot to show that the variables related to each others linearly 
-
-
-
 
 - response variable will be (Si)
-# Part (a)
-
-
 ```{r}
 cor(glass[,c("Si", "RI", "Na", "Mg", "Al", "K", "Ca", "Ba", "Fe")])
 ```
 
-```{r}
-ggplot(data=glass, aes(x=type, y=Si)) + 
-  geom_boxplot()
-```
 
-
+# part(a)
 - Select four variables of my choice
 ```{r include=True, echo=FALSE}
 glass_new <- glass %>%
@@ -99,8 +66,36 @@ shapiro.test(glass$Si)
     - why we choose variables
     - what you see from graph
     
-# Part (b) Fit at least two models(should be same type?)
+ Initial assumptions
+  - Dependent variable should be approximately normally distributed
+  - Variables should related to each other linear - use a matrix scatterplot
+  - There should be no significant outliers - Kept at minimum   
+  
+  
+  
+  
+# Part (b-e) Version 1
+
+## Part (b) Fit at least two models(should be same type?)
 We will use MLR
+
+# Test 1 Remove some outliers
+```{r include=T, echo=T}
+boxplot(glass$Si)
+outliers <- boxplot.stats(glass$Si)$out
+max(outliers)
+min(outliers)
+glass_filtered <- subset(glass, glass$Si != max(outliers))
+glass_filtered <- subset(glass, glass$Si != min(outliers))
+
+```
+
+Remove all outliers(Currently our best option)
+```{r include=T, echo=T}
+glass <- subset(glass, glass$Si<74)
+glass <- subset(glass, glass$Si>71.5)
+boxplot(glass$Si)
+```
 
 We will first check for the normality of dependent variable
 ```{r include=TRUE, echo=TRUE}
@@ -115,29 +110,23 @@ normal.
 ```{r include=TRUE, echo=TRUE}
 # We will first check for the normality of dependent variable
 
-glass_model1 <- lm(sqrt(Si) ~., data = glass)
+glass_model1 <- lm(Si^3 ~. , data = glass)
 shapiro.test(residuals(glass_model1))
 
-par(mfrow = c(2,2))
-plot(glass_model1)
-
-glass_model2 <- lm(sqrt(Si)  ~ RI + factor(type) + Na , data = glass)
+glass_model2 <- lm(Si^3  ~ RI + factor(type) + Na , data = glass)
 shapiro.test(residuals(glass_model2))
-par(mfrow = c(2,2))
-plot(glass_model2)
+
 
 mutate_glass <- glass %>%
   mutate(type= case_when(
     type %in% ("Head") ~ "Head",
     TRUE ~ "All Other types"))
 
-glass_model3 <- lm(sqrt(Si)  ~ Na + Mg + Al + K + Ca + Ba + Fe + type , data = mutate_glass)
+glass_model3 <- lm(Si^3 ~. -RI - Mg - Ca - type  , data = mutate_glass)
 shapiro.test(residuals(glass_model3))
-par(mfrow = c(2,2))
-plot(glass_model3)
 
 ```
-After we have take the square root of the dpendent variable Si, we can 
+After we have take the square root of the dpendent variable Si, we can
 
 
 - select the best competing model for statistical analyses
@@ -145,13 +134,17 @@ After we have take the square root of the dpendent variable Si, we can
 summary(glass_model1)
 summary(glass_model2)
 summary(glass_model3)
-#. AIC 
+#. AIC
 
 compareLM(glass_model1, glass_model2, glass_model3)
 ```
 
 
-# Training and testing / k cross-validation method
+
+
+
+## Part (b) version 2
+# (b) Training and testing / k cross-validation method
 ```{r include=T, echo=T} 
 set.seed(123)
 # Regular linear regression with all variables
@@ -225,13 +218,14 @@ results[1]
 summary(glass_model3)
 ```
 
-
-
 (iii): Interpret slopes and intercept of the problem
   - determine the significant predictors at 10% level of significance
-  
-  
-  
+
+$$
+\begin{aligned}
+S_i = &-0.576 - (0.034 \cdot Age) + (0.068 \cdot NumberInHousehold) + (0.534 \cdot All Other Marital Statuses)\\ &+ (1.049 \cdot Divorced Or Widowed) + (0.857 \cdot Married / remarried) + (2.163 \cdot Separated) \\ &- (1.457 \times 10^{-5} \cdot SavingsBalance) - (3.520 \times 10^{-5} \cdot CheckingBalance) \\ &- (0.320 \cdot All Other Genders) + (0.383 \cdot Female) - (0.071 \cdot All OtherStates) \\ &- (0.102 \cdot African American) + (0.097 \cdot All Other Ethinicities)
+\end{aligned}
+$$
   
 (iv): Perform Residual analysis 
   - the four tests
@@ -239,20 +233,43 @@ summary(glass_model3)
   
 ```{r}
 par(mfrow = c(2,2))
-plot(glass_model1)
-
-par(mfrow = c(2,2))
-plot(glass_model2)
-
-par(mfrow = c(2,2))
 plot(glass_model3)
 
-par(mfrow = c(2,2))
-plot(glass_model4)
+# Check for Linearity of glass_model3 using rainbow test
+raintest(glass_model3)
 
-par(mfrow = c(2,2))
-plot(glass_model5)
+# Check for normality of glass_model3 using shaprio tes on residuals
+lr_reid <- residuals(glass_model3)
 
+shapiro.test(lr_reid) # violated
+
+vif(glass_model3) # violated multicollinearity
+ 
+dwtest(glass_model3)
+ 
+raintest(glass_model3)
+
+ols_test_breusch_pagan(glass_model3) # violated
+```
+# Fix
+``` {R}
+# Training and testing method (SEEMS LIKE OUR BEST MODEL)
+training <- glass$Si %>%
+    createDataPartition(p = .75, list = FALSE)
+train.data  <- glass[training, ]
+test.data <- glass[-training, ]
+
+glass_model3 <- lm(Si ~. - Mg - Ca - type, data = train.data)
+predictions <- glass_model3 %>% predict(test.data)
+results <- data.frame( R2 = R2(predictions, test.data$Si),
+            RMSE = RMSE(predictions, test.data$Si),
+            MAE = MAE(predictions, test.data$Si))
+results
+
+
+lr_reid <- residuals(glass_model3)
+
+shapiro.test(lr_reid) 
 ```
 
 
@@ -302,9 +319,12 @@ if (p_value < 0.1) {
 ```
 
 
-
-
 # Part (e):
+
+
+
+
+
 
 
 
