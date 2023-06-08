@@ -23,11 +23,13 @@ library(quadprog)
 ```
 
 
+# Introduction 
 
+By utilizing the glass identification dataset graciously provided by the USA Forensic Science Service, we have successfully derived insights and constructed a regression equation to forecast the occurrence of silicon (Si). This prediction is based on the observed oxide content found in the various types of glass examined in the study.
 
 # Problem 1
 
-## part(a)
+## Part(a)
 
 ```{r include=FALSE, echo=FALSE}
 glass <- read.csv("glass.csv")
@@ -41,7 +43,7 @@ cor(glass[,c("Si", "RI", "Na", "Mg", "Al", "K", "Ca", "Ba", "Fe")])
 ```{r warning=FALSE, message=FALSE}
 # Select the highest correlated variables
 glass_new <- glass %>%
-  select(Si, RI, Ca, type)
+  select(Si, RI, type)
 
 # Rename for facet wrap labels
 glass_names <- as_labeller(
@@ -50,7 +52,7 @@ glass_names <- as_labeller(
     'Tabl' = "Tableware",
     'Veh' = "Vehicle Windows (float glass)",
     'WinF' = "Building Windows (float glass)",
-    'WinNF' = "Building Windows (non float glass)")
+    'WinNF' = "Building Windows (non-float glass)")
 )
 
 # Scatter plot of Si vs RI for each glass type
@@ -66,6 +68,10 @@ ggplot(data= glass_new, aes(x=RI, y= Si, color = type)) +
   theme(legend.position = "none") +
   guides(color = guide_legend(nrow = 1))
 ```
+
+To visualize the relationship between two numerical variables and illustrate the variation across different types of glass, we conducted a correlation analysis. Our aim was to identify the pair of variables with the highest correlation coefficient. In accordance with the given problem, we selected silicon (Si) as our dependent variable. Subsequently, we chose the refractive index (RI) as the independent variable due to its strong correlation with Si, indicated by a coefficient of -0.54. This implies a moderately negative correlation between Si and RI. As a result, we can infer that as the silicon content decreases, the refractive index of the glass is expected to increase.
+
+Based on our visualization, it is evident that there exists a moderately negative correlation between Si and RI across all glass types, except for container glass, which surprisingly exhibits a moderately positive correlation. This peculiar pattern may be attributed to the elevated presence of water-insoluble oxides in container glass, contributing to enhanced chemical durability against water, a crucial requirement for storing beverages and food. Another noteworthy observation is that the refractive index tends to cluster around 0 for all glass types. This indicates that light passing through the glass travels at a velocity equal to that in a vacuum, exhibiting no bending or refraction. Such consistency around the refractive index of 0 appears to be a desirable characteristic across all glass types. While the majority of glass types exhibit a RI range between -5 and 5, it is worth noting that building windows display the widest RI range, with float glass spanning from -5 to 10 and non-float glass ranging from -5 to 15. On the other hand, vehicle glass demonstrates the smallest RI range, spreading from -2 to 4. In terms of Si concentration, tableware stands out with the highest Si content compared to other glass types, whereas building windows (non-float glass) generally possess the lowest Si concentration. Additionally, tableware showcases the most significant decline in Si per unit decrease in RI, indicating a steep relationship between these variables.
 
 
 ```{r}
