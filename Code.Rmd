@@ -34,30 +34,41 @@ glass <- read.csv("glass.csv")
 ```
 
 ```{r}
+# Correlation for all numerical variables
 cor(glass[,c("Si", "RI", "Na", "Mg", "Al", "K", "Ca", "Ba", "Fe")])
 ```
 
-
-```{r include=TRUE, echo=FALSE}
+```{r warning=FALSE, message=FALSE}
+# Select the highest correlated variables
 glass_new <- glass %>%
-  # COMMIT,AGE, SALARY, CLIMATE, SUPPORT
   select(Si, RI, Ca, type)
-head(glass_new)
-```
 
+# Rename for facet wrap labels
+glass_names <- as_labeller(
+  c('Con' = "Containers",
+    'Head' = "Headlamps",
+    'Tabl' = "Tableware",
+    'Veh' = "Vehicle Windows (float glass)",
+    'WinF' = "Building Windows (float glass)",
+    'WinNF' = "Building Windows (non float glass)")
+)
 
-- use visualization plot to tell a story, making use the variables selected
-- Using color,faceting, theme in ggplot2
-
-
-```{r include=TRUE, echo=TRUE}
+# Scatter plot of Si vs RI for each glass type
 ggplot(data= glass_new, aes(x=RI, y= Si, color = type)) +
-  geom_point()+
-  facet_wrap(~type)
+  geom_point() +
+  geom_smooth(method = lm, se = T) +
+  facet_wrap(~type, labeller = glass_names) +
+  labs(title = "Comparision of Silicon with it's refractive index in different types of glass",
+       x = "Refractive Index", 
+       y = "Silicon",
+       color = "Glass Types") +
+  theme_bw() +
+  theme(legend.position = "none") +
+  guides(color = guide_legend(nrow = 1))
 ```
 
 
-```{r include=TRUE, echo=TRUE}
+```{r}
 # We will first check for the normality of dependent variable
 shapiro.test(glass$Si)
 ```
@@ -141,7 +152,7 @@ boxplot(glass$Si)
 
 ## Part (b) 
 
-```{r include=T, echo=T} 
+```{r} 
 set.seed(123)
 
 # Regular linear regression with all variables
@@ -213,7 +224,8 @@ RMSE <- model3_results[1]
 RMSE
 ```
 
-This coefficient of determination suggests that 98.47% of the variation in Si content could be explained by variables of our best model.
+The coefficient of determination, also known as R-squared, is a metric used in regression analysis to evaluate how well a model fits the data. It indicates the proportion of the dependent variable's variability that can be explained by the independent variables. R-squared ranges from 0 to 1, where 0 signifies that the independent variables have no influence on the variation, and 1 means they explain all of it. Our best model had an impressive R-squared value of 0.9930, indicating that 99.30% of the dependent variable's variance is captured by the independent variables.
+
 
 
 * (ii) Least-squares estimates for the regression line
