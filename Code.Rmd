@@ -27,28 +27,29 @@ library(quadprog)
 
 # Problem 1
 
-## Testing 
-```{r include=T, echo=T}
+## part(a)
+
+```{r include=FALSE, echo=FALSE}
 glass <- read.csv("glass.csv")
 ```
 
-
-- response variable will be (Si)
 ```{r}
 cor(glass[,c("Si", "RI", "Na", "Mg", "Al", "K", "Ca", "Ba", "Fe")])
 ```
 
 
-# part(a)
-- Select four variables of my choice
 ```{r include=TRUE, echo=FALSE}
 glass_new <- glass %>%
   # COMMIT,AGE, SALARY, CLIMATE, SUPPORT
   select(Si, RI, Ca, type)
 head(glass_new)
 ```
+
+
 - use visualization plot to tell a story, making use the variables selected
 - Using color,faceting, theme in ggplot2
+
+
 ```{r include=TRUE, echo=TRUE}
 ggplot(data= glass_new, aes(x=RI, y= Si, color = type)) +
   geom_point()+
@@ -60,21 +61,14 @@ ggplot(data= glass_new, aes(x=RI, y= Si, color = type)) +
 # We will first check for the normality of dependent variable
 shapiro.test(glass$Si)
 ```
-We choose the variable RI(reflective inference) and Si as our x and y axis to
+We choose the variable RI (refractive index) and Si as our x and y axis to
 illustrate their correlations.  
 
   - 2 Paragraphs
     - why we choose variables
     - what you see from graph
     
- Initial assumptions
-  - Dependent variable should be approximately normally distributed
-  - Variables should related to each other linear - use a matrix scatterplot
-  - There should be no significant outliers - Kept at minimum   
-  
-  
-  
-  
+
 <!-- # Part (b-e) Version 1 -->
 
 <!-- ## Part (b) Fit at least two models(should be same type?) -->
@@ -145,21 +139,10 @@ boxplot(glass$Si)
 ```
 
 
-```{r}
-ggplot(data = glass, aes(x = K, y = Si)) +
-  geom_point()
-```
+## Part (b) 
 
-
-
-
-## Part (b) version 2
-# (b) Training and testing / k cross-validation method
 ```{r include=T, echo=T} 
 set.seed(123)
-
-glass <- glass %>%
-  filter(K<6)
 
 # Regular linear regression with all variables
 glass_model1 <- lm(Si ~., data = glass)
@@ -168,16 +151,16 @@ model1_results <- data.frame( R2 = R2(predictions, glass$Si),
             RMSE = RMSE(predictions, glass$Si),
             MAE = MAE(predictions, glass$Si))
 model1_results
-summary(glass_model1)
 
 
- # Regular linear regression with 3 variables
- glass_model2 <- lm(Si  ~ RI + factor(type) + Na , data = glass)
- predictions <- glass_model2 %>% predict(glass)
- results <- data.frame( R2 = R2(predictions, glass$Si),
+
+# Regular linear regression with 4 variables from our visualization
+glass_model2 <- lm(Si  ~ RI + factor(type) + Na + Ca , data = glass)
+predictions <- glass_model2 %>% predict(glass)
+model2_results <- data.frame( R2 = R2(predictions, glass$Si),
              RMSE = RMSE(predictions, glass$Si),
              MAE = MAE(predictions, glass$Si))
- results
+model2_results
 
 # Training and testing method (SEEMS LIKE OUR BEST MODEL BECAUSE OF LOWER RMSE)
 training <- glass$Si %>%
@@ -192,23 +175,21 @@ model3_results <- data.frame( R2 = R2(predictions, test.data$Si),
             MAE = MAE(predictions, test.data$Si))
 model3_results
 
+# varImp(glass_model3)
 
 
-varImp(glass_model3)
 
 
- # model 4 will use k-cross validation
- ctrl <- trainControl(method = "cv", number = 10)
- glass_model4 <- train(Si ~ ., data = glass, method = "lm", trControl = ctrl)
- print(glass_model4)
- 
- 
- 
- # model 5 will use repeated k-cross validation
- ctrl_repeat <- trainControl(method = "repeatedcv", number = 10,  repeats = 3)
- glass_model5 <- train(Si ~ ., data = glass, 
-                       method = "lm", trControl = ctrl_repeat)
- print(glass_model5)
+# # model 4 will use k-cross validation
+# ctrl <- trainControl(method = "cv", number = 10)
+# glass_model4 <- train(Si ~ ., data = glass, method = "lm", trControl = ctrl)
+# print(glass_model4)
+#  
+# # model 5 will use repeated k-cross validation
+# ctrl_repeat <- trainControl(method = "repeatedcv", number = 10,  repeats = 3)
+# glass_model5 <- train(Si ~ ., data = glass, 
+#                        method = "lm", trControl = ctrl_repeat)
+# print(glass_model5)
 
 
 ```
@@ -218,26 +199,30 @@ Argue your choice
 
 The lower the value for AIC, the better the fit of the model. The absolute value of the AIC value is not important. It can be positive or negative.
 
-Preconlcusion: Model 2 is a lost better. 
-Based on the RMSE values we generated for the four models above, the model 3
-where we used 70% training data model is our best model
+Preconlcusion: Model 3 is a lot better. 
+Based on the RMSE values we generated for the three models above, the model 3
+where we used 75% training data model is our best model
 
 
-# Part (c) Use result of best model, answer following questions
-(i): Explain coefficient of determination
+## Part (c) 
+
+* (i) Coefficient of determination
+
 ```{r}
 RMSE <- model3_results[1]
 RMSE
 ```
+
 This coefficient of determination suggests that 98.47% of the variation in Si content could be explained by variables of our best model.
 
-(ii): Find Least-squares estimates: Basically Regression
+
+* (ii) Least-squares estimates for the regression line
+
 ```{r}
 summary(glass_model3)
 ```
 
-(iii): Interpret slopes and intercept of the problem
-  - determine the significant predictors at 10% level of significance
+Regression equation:
 
 $$
 \begin{aligned}
@@ -245,10 +230,18 @@ $$
 \end{aligned}
 $$
 
+* (iii) Slopes and intercept interpretation
+
+
+  - determine the significant predictors at 10% level of significance
+
+
+
 All of the variables in our best model are significant predictors of Si content at 10% confidence. This regression equation suggests that when none of the critical elements are present in the glass, 98.81% of the material will be Si The negative slopes in the equation means that an increase of the presence of any other element by one percent will decrease the Si content of the glass by roughly one percent, which makes sense. However, the exception is Fe, which only decreases Si content by 0.35% for every one percent change.
 
 
-(iv): Perform Residual analysis 
+* (iv) Residual analysis 
+
   - the four tests
   - four plots group together
   
@@ -279,56 +272,58 @@ ols_test_breusch_pagan(glass_model3) # violated
 
 ols_plot_resid_stud(glass_model3) # OUTLIER!!!!
 ```
+
 Based on the rainbow test on our model, the linearity assumption is not violated, as the null hypothesis of a linear fit is not rejected (p > 0.05). However, the results of a Shapiro test on the residuals of the model conclude they are not normal, as p < 0.05 here. Heteroscedasticity is also present in the residuals, as is an outlier. Thus, the assumptions on residuals of regression models to be normal do not hold.
 
-# Part (d): separate observations into 
-- group 1: type = WinF
-- group 2: type= WonNF
-Variable A1, level alpha = 0.1 
 
+## Part (d)
 
 ```{r}
-# Assuming your dataset is named 'data' and the variable of interest is 'Al'
-group1 <- subset(glass, type == "WinF")$Al
-group2 <- subset(glass, type == "WinNF")$Al
 
-# Perform a t-test: If the distribution of the variable Al follows a normal distribution, use a t-test to compare the means of the two groups
-ttest_result <- t.test(group1, group2)
-ttest_result
+glass_mutate <- glass %>%
+  filter(type == "WinF" | type == "WinNF")
 
-p_value <- ttest_result$p.value
+# Check 1 Independent of one another
+boxplot(Al ~ type, 
+        data = glass_mutate, 
+        main = "Comparison of AL and types: WinF and WinNF")
 
-# Interpret the t-test results
-if (p_value < 0.1) {
-  cat("The distributions of the two groups are significantly different at the 0.10 significance level.")
-} else {
-  cat("The distributions of the two groups are not significantly different at the 0.10 significance level.")
-}
-
-```
-We can clearly sees that the two group of different glass products WinF and
-WonF
-
-```{r}
-# Perform a non-parametric test: If the distribution of Al is not normal, use a non-parametric test, such as the Wilcoxon-Mann-Whitney test, to compare the medians of the two groups
-
-shapiro.test(glass$Al)
+# Check 2: Normality
+shapiro.test(glass_mutate$Al)
 
 
-wilcox_result <- wilcox.test(group1, group2)
+# Check 3: Levene's test, The two groups have equal variance
+var.test(Al ~ type, 
+         data = glass_mutate,
+         conf.level = 0.9)
+
+
+# Perform a non-parametric test: Since the distribution of Al is not normal, use a 
+# non-parametric test, such as the Wilcoxon-Mann-Whitney test, to compare the 
+# medians of the two groups
+wilcox_result <- wilcox.test(Al ~ type, 
+                             data = glass_mutate, 
+                             var.equal = TRUE,
+                             conf.level = 0.9)
 wilcox_result
 p_value <- wilcox_result$p.value
 
-if (p_value < 0.1) {
-  cat("The distributions of the two groups are significantly different at the 0.10 significance level.")
-} else {
-  cat("The distributions of the two groups are not significantly different at the 0.10 significance level.")
-}
+```
 
+```{r include = TRUE, echo=FALSE}
+if (p_value < 0.1) {
+  cat("\nThe distributions of the two groups are significantly different at the 10% significance level.")
+} else {
+  cat("\nThe distributions of the two groups are not significantly different at the 10% significance level.")
+}
 ```
 
 
-# Part (e):
+The Shaprio test reveals a deviation from normal distribution in Al, as evidenced by a p-value below 0.05. Consequently, a t-test comparing the means of the two groups cannot be conducted due to the non-normality. However, the two groups are independent and exhibit variances that are not significantly dissimilar, as indicated by an F test p-value exceeding 0.05. Thus, it is appropriate to employ a non-parametric test like the Wilcoxon-Mann-Whitney test to compare the medians of the two groups. Employing a 10% level of significance, the distributions of the two groups, WinF and WinNF, are markedly distinct since the p-value for the Wilcoxon test is significantly below 0.05.
+
+
+
+## Part (e):
 
 ```{r}
 set.seed(123)
@@ -348,7 +343,8 @@ e <- rnorm(n=N, 0, 1)
 # Saves coefficients from our model3 as variables
 coef <- summary(glass_model3)$coefficients
 
-y <- e + coef[1] + coef[2]*Na + coef[3]*Mg + coef[4]*Al + coef[5]*K + coef[6]*Ca + coef[7]*Ba + coef[8]*Fe
+y <- e + coef[1] + coef[2]*Na + coef[3]*Mg + coef[4]*Al + coef[5]*K + 
+  coef[6]*Ca + coef[7]*Ba + coef[8]*Fe
 
 summary(y)
 
@@ -362,13 +358,14 @@ summary(y)
 sim_model <- lm(y ~ Na + Mg + Al + K + Ca + Ba + Fe)
 summary(sim_model)
 ```
-Simulated Model Regression:
+Simulated Model Regression equation:
 
 $$
 \begin{aligned}
 \Large Si &= \Large  98.32 - (0.89 \cdot Na) - (0.989 \cdot Mg) - (0.993 \cdot Al) \\ &- \Large (1.26 \cdot K) - (0.98 \cdot Ca) - (0.805 \cdot Ba) + (1.05 \cdot Fe)
 \end{aligned}
 $$
+
 This regression equation suggests that when none of the critical elements are present in the glass, 98.32% of the material will be Si. The negative slopes in the equation means that an increase of the presence of any other element by one percent will decrease the Si content of the glass by roughly one percent, which makes sense. 
 
 It is clearly to see that our simulated regression has completely different coefficients
@@ -404,17 +401,17 @@ ols_plot_resid_stud(sim_model) # OUTLIER!!!!
 
 # Problem 3
 
-## a)
+## Part (a)
 ```{r include=FALSE, echo=FALSE}
 Handout1 <- read.csv("Handout 1.csv")
 ```
 
-### i)
+
 We choose to use 10-cross validation. Why we choose it 
 
-### ii) 10-fold Cross-Validation
+### 10-fold Cross-Validation
 
-```{r include=FALSE, echo=FALSE}
+```{r}
 # Convert COMMIT to binary < median = 0, otherwise = 1.
 
 new_Handout1 <- Handout1 %>%
@@ -492,7 +489,7 @@ con_matx
 ```
 
 
-## b)
+## Part (b)
 
 Our objective is to optimize the cost function in order to identify the most economical approach for fulfilling the Christmas order. This entails striving for the lowest cost per day to achieve maximum cost efficiency. By minimizing expenses at each factory, we can ensure a cost-effective process for meeting the demands of the Christmas order.
 
@@ -644,7 +641,7 @@ min_solution$sens.coef.to
 
 
 
-## c)
+## Part (c)
 
 ```{r}
 compute_weibull_stats <- function(shape, scale) {
