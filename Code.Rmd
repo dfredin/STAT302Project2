@@ -60,7 +60,8 @@ ggplot(data= glass_new, aes(x=RI, y= Si, color = type)) +
 # We will first check for the normality of dependent variable
 shapiro.test(glass$Si)
 ```
-
+We choose the variable RI(reflective inference) and Si as our x and y axis to
+illustrate their correlations.  
 
   - 2 Paragraphs
     - why we choose variables
@@ -278,7 +279,7 @@ ols_test_breusch_pagan(glass_model3) # violated
 
 ols_plot_resid_stud(glass_model3) # OUTLIER!!!!
 ```
-Based on the rainbow test on our model, the linearity assumption is not violated, as the null hypothesis of a linear fit is not rejected (p > 0.05). However, the results of a Shapiro test on the residuals of the model conclude they are not normal, as p < 0.05 here. Heteroscedasticity is also present in the residuals, as is an outlier. Thus, the assumptions on residuals of regression models do not hold.
+Based on the rainbow test on our model, the linearity assumption is not violated, as the null hypothesis of a linear fit is not rejected (p > 0.05). However, the results of a Shapiro test on the residuals of the model conclude they are not normal, as p < 0.05 here. Heteroscedasticity is also present in the residuals, as is an outlier. Thus, the assumptions on residuals of regression models to be normal do not hold.
 
 # Part (d): separate observations into 
 - group 1: type = WinF
@@ -305,6 +306,8 @@ if (p_value < 0.1) {
 }
 
 ```
+We can clearly sees that the two group of different glass products WinF and
+WonF
 
 ```{r}
 # Perform a non-parametric test: If the distribution of Al is not normal, use a non-parametric test, such as the Wilcoxon-Mann-Whitney test, to compare the medians of the two groups
@@ -359,7 +362,18 @@ summary(y)
 sim_model <- lm(y ~ Na + Mg + Al + K + Ca + Ba + Fe)
 summary(sim_model)
 ```
+Simulated Model Regression:
 
+$$
+\begin{aligned}
+\Large Si &= \Large  98.32 - (0.89 \cdot Na) - (0.989 \cdot Mg) - (0.993 \cdot Al) \\ &- \Large (1.26 \cdot K) - (0.98 \cdot Ca) - (0.805 \cdot Ba) + (1.05 \cdot Fe)
+\end{aligned}
+$$
+This regression equation suggests that when none of the critical elements are present in the glass, 98.32% of the material will be Si. The negative slopes in the equation means that an increase of the presence of any other element by one percent will decrease the Si content of the glass by roughly one percent, which makes sense. 
+
+It is clearly to see that our simulated regression has completely different coefficients
+for iron where for every one percent of increase in iron, the percentage of materials
+that are silicon in the glass will increases by 1.05%. (Certain chemical properties?)
 
 ```{r}
 # Check for Linearity of glass_model3 using rainbow test
@@ -379,14 +393,6 @@ ols_test_breusch_pagan(sim_model) # violated
 
 ols_plot_resid_stud(sim_model) # OUTLIER!!!!
 ```
-
-
-
-
-
-
-
-
 
 
 
@@ -694,9 +700,6 @@ cat("Variance:", variance_value, "\n")
 ```
 
 ### Maximum likelihood estimator (MLE) of the parameters from the Weibull distribution
-
-
-
 Probability Density Function $(f(x;\lambda,k))$ for the Weibull distribution:
 
 
