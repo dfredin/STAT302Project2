@@ -479,18 +479,12 @@ cvmodel <- train(COMMIT ~ .,
                  family = "binomial",  
                  trControl=ctrlspecs)
 
-
-# results1 <- data.frame( R2 = R2(predictions, test$COMMIT),
-#             RMSE = RMSE(predictions, test$COMMIT),
-#             MAE = MAE(predictions, test$COMMIT))
-# # Results for 10-fold Cross-validation method
-# results1
-
-# Model for 10-fold Cross-validation method
+# Model summary for 10-fold Cross-validation method
 summary(cvmodel)
+# Model for 10-fold Cross-validation method
 print(cvmodel)
+# Important variables for 10-fold Cross-validation method
 varImp(cvmodel)
-
 ```
 
 ### Model Accuracy
@@ -504,7 +498,7 @@ con_matx <- confusionMatrix(data=predictions, test$COMMIT)
 con_matx
 ```
 
-Upon analyzing the confusion matrix, it is evident that our model achieved an accuracy rate of 80% when evaluated on the testing data.
+After examining the confusion matrix, it becomes apparent that our model attained an accuracy rate of 80% (95% CI: 0.61-0.92) when tested on the data. As the p-value exceeds 0.05, this suggests that our model exhibits a statistically significant level of accuracy.
 
 ## Part (b)
 
