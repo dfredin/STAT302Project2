@@ -74,71 +74,80 @@ shapiro.test(glass$Si)
   
   
   
-# Part (b-e) Version 1
+<!-- # Part (b-e) Version 1 -->
 
-## Part (b) Fit at least two models(should be same type?)
-We will use MLR
+<!-- ## Part (b) Fit at least two models(should be same type?) -->
+<!-- We will use MLR -->
 
-# Test 1 Remove some outliers
-```{r include=T, echo=T}
+<!-- # Test 1 Remove some outliers -->
+<!-- ```{r include=T, echo=T} -->
+<!-- boxplot(glass$Si) -->
+<!-- outliers <- boxplot.stats(glass$Si)$out -->
+<!-- max(outliers) -->
+<!-- min(outliers) -->
+<!-- glass_filtered <- subset(glass, glass$Si != max(outliers)) -->
+<!-- glass_filtered <- subset(glass, glass$Si != min(outliers)) -->
+
+<!-- ``` -->
+
+<!-- Remove all outliers(Currently our best option) -->
+<!-- ```{r include=T, echo=T} -->
+<!-- glass <- subset(glass, glass$Si<74) -->
+<!-- glass <- subset(glass, glass$Si>71.5) -->
+<!-- boxplot(glass$Si) -->
+<!-- ``` -->
+
+<!-- We will first check for the normality of dependent variable -->
+<!-- ```{r include=TRUE, echo=TRUE} -->
+<!-- # We will first check for the normality of dependent variable -->
+<!-- shapiro.test(glass$Si) -->
+<!-- ``` -->
+<!-- Since the shapiro test gives us a p-value 2.175e-09, which is less than 0.05, -->
+<!-- we will need to take the square root of our dependent variable to make it -->
+<!-- normal. -->
+
+<!-- # Factor data directly -->
+<!-- ```{r include=TRUE, echo=TRUE} -->
+<!-- # We will first check for the normality of dependent variable -->
+
+<!-- glass_model1 <- lm(Si^3 ~. , data = glass) -->
+<!-- shapiro.test(residuals(glass_model1)) -->
+
+<!-- glass_model2 <- lm(Si^3  ~ RI + factor(type) + Na , data = glass) -->
+<!-- shapiro.test(residuals(glass_model2)) -->
+
+
+<!-- mutate_glass <- glass %>% -->
+<!--   mutate(type= case_when( -->
+<!--     type %in% ("Head") ~ "Head", -->
+<!--     TRUE ~ "All Other types")) -->
+
+<!-- glass_model3 <- lm(Si^3 ~. -RI - Mg - Ca - type  , data = mutate_glass) -->
+<!-- shapiro.test(residuals(glass_model3)) -->
+
+<!-- ``` -->
+<!-- After we have take the square root of the dpendent variable Si, we can -->
+
+
+<!-- - select the best competing model for statistical analyses -->
+<!-- ```{r include=T, echo=T} -->
+<!-- summary(glass_model1) -->
+<!-- summary(glass_model2) -->
+<!-- summary(glass_model3) -->
+<!-- #. AIC -->
+
+<!-- compareLM(glass_model1, glass_model2, glass_model3) -->
+<!-- ``` -->
+
+```{r}
 boxplot(glass$Si)
-outliers <- boxplot.stats(glass$Si)$out
-max(outliers)
-min(outliers)
-glass_filtered <- subset(glass, glass$Si != max(outliers))
-glass_filtered <- subset(glass, glass$Si != min(outliers))
-
 ```
 
-Remove all outliers(Currently our best option)
-```{r include=T, echo=T}
-glass <- subset(glass, glass$Si<74)
-glass <- subset(glass, glass$Si>71.5)
-boxplot(glass$Si)
+
+```{r}
+ggplot(data = glass, aes(x = K, y = Si)) +
+  geom_point()
 ```
-
-We will first check for the normality of dependent variable
-```{r include=TRUE, echo=TRUE}
-# We will first check for the normality of dependent variable
-shapiro.test(glass$Si)
-```
-Since the shapiro test gives us a p-value 2.175e-09, which is less than 0.05,
-we will need to take the square root of our dependent variable to make it
-normal. 
-
-# Factor data directly
-```{r include=TRUE, echo=TRUE}
-# We will first check for the normality of dependent variable
-
-glass_model1 <- lm(Si^3 ~. , data = glass)
-shapiro.test(residuals(glass_model1))
-
-glass_model2 <- lm(Si^3  ~ RI + factor(type) + Na , data = glass)
-shapiro.test(residuals(glass_model2))
-
-
-mutate_glass <- glass %>%
-  mutate(type= case_when(
-    type %in% ("Head") ~ "Head",
-    TRUE ~ "All Other types"))
-
-glass_model3 <- lm(Si^3 ~. -RI - Mg - Ca - type  , data = mutate_glass)
-shapiro.test(residuals(glass_model3))
-
-```
-After we have take the square root of the dpendent variable Si, we can
-
-
-- select the best competing model for statistical analyses
-```{r include=T, echo=T}
-summary(glass_model1)
-summary(glass_model2)
-summary(glass_model3)
-#. AIC
-
-compareLM(glass_model1, glass_model2, glass_model3)
-```
-
 
 
 
@@ -147,21 +156,27 @@ compareLM(glass_model1, glass_model2, glass_model3)
 # (b) Training and testing / k cross-validation method
 ```{r include=T, echo=T} 
 set.seed(123)
+
+glass <- glass %>%
+  filter(K<6)
+
 # Regular linear regression with all variables
 glass_model1 <- lm(Si ~., data = glass)
 predictions <- glass_model1 %>% predict(glass)
-results <- data.frame( R2 = R2(predictions, glass$Si),
+model1_results <- data.frame( R2 = R2(predictions, glass$Si),
             RMSE = RMSE(predictions, glass$Si),
             MAE = MAE(predictions, glass$Si))
-results
+model1_results
+summary(glass_model1)
 
-# Regular linear regression with 3 variables
-glass_model2 <- lm(Si  ~ RI + factor(type) + Na , data = glass)
-predictions <- glass_model2 %>% predict(glass)
-results <- data.frame( R2 = R2(predictions, glass$Si),
-            RMSE = RMSE(predictions, glass$Si),
-            MAE = MAE(predictions, glass$Si))
-results
+
+# # Regular linear regression with 3 variables
+# glass_model2 <- lm(Si  ~ RI + factor(type) + Na , data = glass)
+# predictions <- glass_model2 %>% predict(glass)
+# results <- data.frame( R2 = R2(predictions, glass$Si),
+#             RMSE = RMSE(predictions, glass$Si),
+#             MAE = MAE(predictions, glass$Si))
+# results
 
 # Training and testing method (SEEMS LIKE OUR BEST MODEL)
 training <- glass$Si %>%
@@ -169,29 +184,30 @@ training <- glass$Si %>%
 train.data  <- glass[training, ]
 test.data <- glass[-training, ]
 
-glass_model3 <- lm(Si ~., data = train.data)
+glass_model3 <- lm(Si ~ Na + Mg + Al + K + Ca + Ba + Fe, data = train.data)
 predictions <- glass_model3 %>% predict(test.data)
-results <- data.frame( R2 = R2(predictions, test.data$Si),
+model3_results <- data.frame( R2 = R2(predictions, test.data$Si),
             RMSE = RMSE(predictions, test.data$Si),
             MAE = MAE(predictions, test.data$Si))
-results
-
-
-# varImp(glass_model3)
-
-
-# model 4 will use k-cross validation
-ctrl <- trainControl(method = "cv", number = 10)
-glass_model4 <- train(Si ~ ., data = glass, method = "lm", trControl = ctrl)
-print(glass_model4)
+model3_results
 
 
 
-# model 5 will use repeated k-cross validation
-ctrl_repeat <- trainControl(method = "repeatedcv", number = 10,  repeats = 3)
-glass_model5 <- train(Si ~ ., data = glass, 
-                      method = "lm", trControl = ctrl_repeat)
-print(glass_model5)
+varImp(glass_model3)
+
+
+# # model 4 will use k-cross validation
+# ctrl <- trainControl(method = "cv", number = 10)
+# glass_model4 <- train(Si ~ ., data = glass, method = "lm", trControl = ctrl)
+# print(glass_model4)
+# 
+# 
+# 
+# # model 5 will use repeated k-cross validation
+# ctrl_repeat <- trainControl(method = "repeatedcv", number = 10,  repeats = 3)
+# glass_model5 <- train(Si ~ ., data = glass, 
+#                       method = "lm", trControl = ctrl_repeat)
+# print(glass_model5)
 
 
 ```
@@ -202,14 +218,15 @@ Argue your choice
 The lower the value for AIC, the better the fit of the model. The absolute value of the AIC value is not important. It can be positive or negative.
 
 Preconlcusion: Model 2 is a lost better. 
-Based on the RMSE values we generated for the four mdoels above, the model 3
+Based on the RMSE values we generated for the four models above, the model 3
 where we used 70% training data model is our best model
 
 
 # Part (c) Use result of best model, answer following questions
 (i): Explain coefficient of determination
 ```{r}
-results[1]
+RMSE <- model3_results[1]
+RMSE
 ```
 
 
@@ -223,10 +240,13 @@ summary(glass_model3)
 
 $$
 \begin{aligned}
-S_i = &-0.576 - (0.034 \cdot Age) + (0.068 \cdot NumberInHousehold) + (0.534 \cdot All Other Marital Statuses)\\ &+ (1.049 \cdot Divorced Or Widowed) + (0.857 \cdot Married / remarried) + (2.163 \cdot Separated) \\ &- (1.457 \times 10^{-5} \cdot SavingsBalance) - (3.520 \times 10^{-5} \cdot CheckingBalance) \\ &- (0.320 \cdot All Other Genders) + (0.383 \cdot Female) - (0.071 \cdot All OtherStates) \\ &- (0.102 \cdot African American) + (0.097 \cdot All Other Ethinicities)
+\Large Si &= \Large  98.81 - (0.94 \cdot Na) - (0.99 \cdot Mg) - (1.00 \cdot Al) \\ &- \Large (0.98 \cdot K) - (0.98 \cdot Ca) - (0.96 \cdot Ba) - (0.35 \cdot Fe)
 \end{aligned}
 $$
-  
+
+All of them are significant predictors.
+
+
 (iv): Perform Residual analysis 
   - the four tests
   - four plots group together
@@ -238,40 +258,27 @@ plot(glass_model3)
 # Check for Linearity of glass_model3 using rainbow test
 raintest(glass_model3)
 
-# Check for normality of glass_model3 using shaprio tes on residuals
-lr_reid <- residuals(glass_model3)
 
-shapiro.test(lr_reid) # violated
 
-vif(glass_model3) # violated multicollinearity
+# Check for normality of glass_model3 using shapiro test on residuals
+
+# (This predicts residuals on training data)
+real_resid <- residuals(glass_model3)
+shapiro.test(real_resid) # violated 
+
+# (This predicts residuals on TESTING data)
+resids <- test.data$Si - predictions # This is what we want!
+shapiro.test(resids) 
+
+# Check for multicollinearity 
+vif(glass_model3)
  
 dwtest(glass_model3)
- 
-raintest(glass_model3)
 
 ols_test_breusch_pagan(glass_model3) # violated
+
+ols_plot_resid_stud(glass_model3) # OUTLIER!!!!
 ```
-# Fix
-``` {R}
-# Training and testing method (SEEMS LIKE OUR BEST MODEL)
-training <- glass$Si %>%
-    createDataPartition(p = .75, list = FALSE)
-train.data  <- glass[training, ]
-test.data <- glass[-training, ]
-
-glass_model3 <- lm(Si ~. - Mg - Ca - type, data = train.data)
-predictions <- glass_model3 %>% predict(test.data)
-results <- data.frame( R2 = R2(predictions, test.data$Si),
-            RMSE = RMSE(predictions, test.data$Si),
-            MAE = MAE(predictions, test.data$Si))
-results
-
-
-lr_reid <- residuals(glass_model3)
-
-shapiro.test(lr_reid) 
-```
-
 
 
 # Part (d): separate observations into 
@@ -320,6 +327,67 @@ if (p_value < 0.1) {
 
 
 # Part (e):
+
+```{r}
+set.seed(123)
+# Need 214 values
+N <- 214
+
+Na <- rnorm(n=N, mean = mean(glass$Na), sd(glass$Na))
+Mg <- rnorm(n=N, mean = mean(glass$Mg), sd(glass$Mg))
+Al <- rnorm(n=N, mean = mean(glass$Al), sd(glass$Al))
+K <- rnorm(n=N, mean = mean(glass$K), sd(glass$K))
+Ca <- rnorm(n=N, mean = mean(glass$Ca), sd(glass$Ca))
+Ba <- rnorm(n=N, mean = mean(glass$Ba), sd(glass$Ba))
+Fe <- rnorm(n=N, mean = mean(glass$Fe), sd(glass$Fe))
+
+e <- rnorm(n=N, 0, 1)
+
+# Saves coefficients from our model3 as variables
+coef <- summary(glass_model3)$coefficients
+
+y <- e + coef[1] + coef[2]*Na + coef[3]*Mg + coef[4]*Al + coef[5]*K + coef[6]*Ca + coef[7]*Ba + coef[8]*Fe
+
+summary(y)
+
+```
+
+
+
+
+```{r}
+# Simulated model
+sim_model <- lm(y ~ Na + Mg + Al + K + Ca + Ba + Fe)
+summary(sim_model)
+```
+
+
+```{r}
+# Check for Linearity of glass_model3 using rainbow test
+raintest(sim_model)
+
+# Check for normality of glass_model3 using shapiro test on residuals
+sim_resid <- residuals(sim_model)
+
+shapiro.test(sim_resid) # violated
+
+# Check for multicollinearity
+vif(sim_model)
+ 
+dwtest(sim_model)
+
+ols_test_breusch_pagan(sim_model) # violated
+
+ols_plot_resid_stud(sim_model) # OUTLIER!!!!
+```
+
+
+
+
+
+
+
+
 
 
 
