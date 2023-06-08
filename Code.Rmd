@@ -579,16 +579,6 @@ cat("The summary of the results:")
 print(result_df)
 ```
 
-
-```{r}
-# Sensitivity Analysis
-
-min_solution$sens.coef.from
-min_solution$sens.coef.to
-
-```
-
-
 ## Part (c)
 
 ```{r}
