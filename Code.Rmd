@@ -73,88 +73,13 @@ To visualize the relationship between two numerical variables and illustrate the
 
 Based on our visualization, it is evident that there exists a moderately negative correlation between Si and RI across all glass types, except for container glass, which surprisingly exhibits a moderately positive correlation. This peculiar pattern may be attributed to the elevated presence of water-insoluble oxides in container glass, contributing to enhanced chemical durability against water, a crucial requirement for storing beverages and food. Another noteworthy observation is that the refractive index tends to cluster around 0 for all glass types. This indicates that light passing through the glass travels at a velocity equal to that in a vacuum, exhibiting no bending or refraction. Such consistency around the refractive index of 0 appears to be a desirable characteristic across all glass types. While the majority of glass types exhibit a RI range between -5 and 5, it is worth noting that building windows display the widest RI range, with float glass spanning from -5 to 10 and non-float glass ranging from -5 to 15. On the other hand, vehicle glass demonstrates the smallest RI range, spreading from -2 to 4. In terms of Si concentration, tableware stands out with the highest Si content compared to other glass types, whereas building windows (non-float glass) generally possess the lowest Si concentration. Additionally, tableware showcases the most significant decline in Si per unit decrease in RI, indicating a steep relationship between these variables.
 
-
-```{r}
-# We will first check for the normality of dependent variable
-shapiro.test(glass$Si)
-```
-
-<!-- # Part (b-e) Version 1 -->
-
-<!-- ## Part (b) Fit at least two models(should be same type?) -->
-<!-- We will use MLR -->
-
-<!-- # Test 1 Remove some outliers -->
-<!-- ```{r include=T, echo=T} -->
-<!-- boxplot(glass$Si) -->
-<!-- outliers <- boxplot.stats(glass$Si)$out -->
-<!-- max(outliers) -->
-<!-- min(outliers) -->
-<!-- glass_filtered <- subset(glass, glass$Si != max(outliers)) -->
-<!-- glass_filtered <- subset(glass, glass$Si != min(outliers)) -->
-
-<!-- ``` -->
-
-<!-- Remove all outliers(Currently our best option) -->
-<!-- ```{r include=T, echo=T} -->
-<!-- glass <- subset(glass, glass$Si<74) -->
-<!-- glass <- subset(glass, glass$Si>71.5) -->
-<!-- boxplot(glass$Si) -->
-<!-- ``` -->
-
-<!-- We will first check for the normality of dependent variable -->
-<!-- ```{r include=TRUE, echo=TRUE} -->
-<!-- # We will first check for the normality of dependent variable -->
-<!-- shapiro.test(glass$Si) -->
-<!-- ``` -->
-<!-- Since the shapiro test gives us a p-value 2.175e-09, which is less than 0.05, -->
-<!-- we will need to take the square root of our dependent variable to make it -->
-<!-- normal. -->
-
-<!-- # Factor data directly -->
-<!-- ```{r include=TRUE, echo=TRUE} -->
-<!-- # We will first check for the normality of dependent variable -->
-
-<!-- glass_model1 <- lm(Si^3 ~. , data = glass) -->
-<!-- shapiro.test(residuals(glass_model1)) -->
-
-<!-- glass_model2 <- lm(Si^3  ~ RI + factor(type) + Na , data = glass) -->
-<!-- shapiro.test(residuals(glass_model2)) -->
-
-
-<!-- mutate_glass <- glass %>% -->
-<!--   mutate(type= case_when( -->
-<!--     type %in% ("Head") ~ "Head", -->
-<!--     TRUE ~ "All Other types")) -->
-
-<!-- glass_model3 <- lm(Si^3 ~. -RI - Mg - Ca - type  , data = mutate_glass) -->
-<!-- shapiro.test(residuals(glass_model3)) -->
-
-<!-- ``` -->
-<!-- After we have take the square root of the dpendent variable Si, we can -->
-
-
-<!-- - select the best competing model for statistical analyses -->
-<!-- ```{r include=T, echo=T} -->
-<!-- summary(glass_model1) -->
-<!-- summary(glass_model2) -->
-<!-- summary(glass_model3) -->
-<!-- #. AIC -->
-
-<!-- compareLM(glass_model1, glass_model2, glass_model3) -->
-<!-- ``` -->
-
-
-
-
 ## Part (b) 
 
 ```{r}
 # We will first check for the normality of dependent variable
 shapiro.test(glass$Si)
-boxplot(glass$Si)
+boxplot(glass$Si, main = "Normality check for Silicon")
 ```
-
 
 ```{r} 
 set.seed(123)
@@ -165,9 +90,6 @@ predictions <- glass_model1 %>% predict(glass)
 model1_results <- data.frame( R2 = R2(predictions, glass$Si),
             RMSE = RMSE(predictions, glass$Si),
             MAE = MAE(predictions, glass$Si))
-model1_results
-
-
 
 # Regular linear regression with 4 variables from our visualization
 glass_model2 <- lm(Si  ~ RI + factor(type) + Na + Ca , data = glass)
@@ -175,9 +97,8 @@ predictions <- glass_model2 %>% predict(glass)
 model2_results <- data.frame( R2 = R2(predictions, glass$Si),
              RMSE = RMSE(predictions, glass$Si),
              MAE = MAE(predictions, glass$Si))
-model2_results
 
-# Training and testing method (SEEMS LIKE OUR BEST MODEL BECAUSE OF LOWER RMSE)
+# Training and testing method
 training <- glass$Si %>%
     createDataPartition(p = .75, list = FALSE)
 train.data  <- glass[training, ]
@@ -188,26 +109,31 @@ predictions <- glass_model3 %>% predict(test.data)
 model3_results <- data.frame( R2 = R2(predictions, test.data$Si),
             RMSE = RMSE(predictions, test.data$Si),
             MAE = MAE(predictions, test.data$Si))
-model3_results
-
-# varImp(glass_model3)
-
-
-
-
-# # model 4 will use k-cross validation
-# ctrl <- trainControl(method = "cv", number = 10)
-# glass_model4 <- train(Si ~ ., data = glass, method = "lm", trControl = ctrl)
-# print(glass_model4)
-#  
-# # model 5 will use repeated k-cross validation
-# ctrl_repeat <- trainControl(method = "repeatedcv", number = 10,  repeats = 3)
-# glass_model5 <- train(Si ~ ., data = glass, 
-#                        method = "lm", trControl = ctrl_repeat)
-# print(glass_model5)
-
-
 ```
+
+
+```{r, results = 'asis', echo=FALSE}
+model_results <- rbind(model1_results, model2_results, model3_results)
+row.names(model_results) <- c("Model 1", "Model 2", "Model 3")
+
+model_kable <- kable(model_results, 
+                    caption = "Summary of the accuracy and error exhibited by our three models.",
+                    format = "latex",
+                    align = "c",
+                    booktabs = TRUE,
+                    row.names = TRUE) %>%
+  kable_styling(full_width = FALSE, latex_options = "HOLD_position")
+print(model_kable)
+```
+
+
+
+
+
+
+
+TALK ABOUT OUR DATA NOT BEING NORMAL AND WE COULDN'T TRANSFORM IT TO A NORMAL DISTRIBUTION.
+
 
 Argue your choice
 - Perform optimization in R, compute the regression coefficients
@@ -224,18 +150,32 @@ where we used 75% training data model is our best model
 # Optimization of our best model
 min.RSS <- function(data, par) {
               with(data, sum((par[1] + par[2] * Na + par[3] * Mg + par[4] * Al 
-                              + par[5] * K + par[6] * Ca + par[7] * Ba + par[8] * Fe - Si)^2))
+                              + par[5] * K + par[6] * Ca 
+                              + par[7] * Ba + par[8] * Fe - Si)^2))
 }
-
 
 result <- optim(par = c(98, -1, -1, -1, -1, -1, -1, 0.5), 
                 fn = min.RSS, 
                 data = train.data)
-result$par
-
-glass_model3$coefficients
-
 ```
+
+```{r, results = 'asis', echo=FALSE}
+coeff_results <- as.data.frame(rbind(glass_model3$coefficients, result$par))
+row.names(coeff_results) <- c("Model 3", "Optimized Model 3")
+
+model_kable <- kable(coeff_results, 
+                    caption = "Summary of the coeffcients between our best model and our optimized model.",
+                    format = "latex",
+                    align = "c",
+                    booktabs = TRUE,
+                    row.names = TRUE) %>%
+  kable_styling(full_width = FALSE, latex_options = "HOLD_position", "scale_down")
+print(model_kable)
+```
+
+
+
+
 
 ```{r}
 # Fit the final model with the optimized coefficients
@@ -253,9 +193,21 @@ predictions <- final_model %>% predict(test.data)
 final_model_results <- data.frame( R2 = R2(predictions, test.data$Si),
             RMSE = RMSE(predictions, test.data$Si),
             MAE = MAE(predictions, test.data$Si))
-final_model_results
+```
 
 
+```{r, results = 'asis', echo=FALSE}
+optimal_model_results <- rbind(model_results, final_model_results)
+row.names(optimal_model_results) <- c("Model 1", "Model 2", "Model 3", "Optimized Model 3")
+
+model_kable <- kable(optimal_model_results, 
+                    caption = "Summary of the accuracy and error exhibited by all our models.",
+                    format = "latex",
+                    align = "c",
+                    booktabs = TRUE,
+                    row.names = TRUE) %>%
+  kable_styling(full_width = FALSE, latex_options = "HOLD_position")
+print(model_kable)
 ```
 
 
@@ -266,13 +218,11 @@ final_model_results
 * (i) Coefficient of determination
 
 ```{r}
-RMSE <- final_model_results[1]
-RMSE
+R2 <- final_model_results[1]
+R2
 ```
 
-The coefficient of determination, also known as R-squared, is a metric used in regression analysis to evaluate how well a model fits the data. It indicates the proportion of the dependent variable's variability that can be explained by the independent variables. R-squared ranges from 0 to 1, where 0 signifies that the independent variables have no influence on the variation, and 1 means they explain all of it. Our best model had an impressive R-squared value of 0.9930, after we optimized our model from a R-sqaured value of 0.9935,indicating that 99.35% of the dependent variable's variance is captured by the independent variables.
-
-
+The coefficient of determination, also known as R-squared, is a metric used in regression analysis to evaluate how well a model fits the data. It indicates the proportion of the dependent variable's variability that can be explained by the independent variables. R-squared ranges from 0 to 1, where 0 signifies that the independent variables have no influence on the variation, and 1 means they explain all of it. Our optimized best model had an impressive R-squared value of 0.9935,indicating that 99.35% of the dependent variable's variance is captured by the independent variables.
 
 * (ii) Least-squares estimates for the regression line
 
@@ -288,46 +238,46 @@ $$
 \end{aligned}
 $$
 
-* (iii) Slopes and intercept interpretation
+* (iii) Slope and intercept interpretation
+
+The regression coefficients correspond to the weight percent of each respective oxide. Thus, the intercept indicates that in the absence of any oxides, the glass will primarily consist of 99.38% silicon. The negative slopes indicate that an increase in the concentration of a specific oxide leads to a decrease in the silicon oxide content. Most of the oxide coefficients are approximately 1, except for iron oxide (Fe). For example, a one unit increase in Na oxide results in a 0.98 decrease in Si content, assuming all other factors remain constant. This relationship is sensible, as the addition of one unit of another oxide typically leads to a corresponding decrease in Si content. However, a one unit increase in Fe oxide content only causes a 0.38 decrease in Si content, while holding all other factors constant. This discrepancy may be attributed to the fact that Fe is an impurity in the glass-making process and is not intentionally added to achieve desired effects, such as Na or Ca.
+
+At a 10% confidence level, all of the variables in our optimized best model exhibit significant predictability for Si content, as indicated by their p-values being less than 0.10. The variables found to be significant predictors are Na, Mg, Al, K, Ca, Ba, and Fe.
 
 
-  - determine the significant predictors at 10% level of significance
+* (iv) Residual analysis
 
-
-
-All of the variables in our best model are significant predictors of Si content at 10% confidence. This regression equation suggests that when none of the critical elements are present in the glass, 98.81% of the material will be Si The negative slopes in the equation means that an increase of the presence of any other element by one percent will decrease the Si content of the glass by roughly one percent, which makes sense. However, the exception is Fe, which only decreases Si content by 0.35% for every one percent change.
-
-
-* (iv) Residual analysis 
 ```{r}
-par(mfrow = c(2,2))
-plot(final_model)
-
-# Check for Linearity of glass_model3 using rainbow test
-raintest(final_model)
-
-
-# Check for normality of glass_model3 using shapiro test on residuals
+# Check for normality of using shapiro test on residuals
 # (This predicts residuals on training data)
 real_resid <- residuals(final_model)
-shapiro.test(real_resid) # violated 
+shapiro.test(real_resid) 
 
-# (This predicts residuals on TESTING data)
-resids <- test.data$Si - predictions # This is what we want!
+# (This predicts residuals on testing data)
+resids <- test.data$Si - predictions 
 shapiro.test(resids) 
 
+# Check for Linearity  using rainbow test
+raintest(final_model)
+
 # Check for multicollinearity 
+cat("Check for multicollinearity\n\n")
 vif(final_model)
  
+# Check for autocorrelation 
 dwtest(final_model)
 
-ols_test_breusch_pagan(final_model) # violated
+# Check for Heteroskedasticity
+ols_test_breusch_pagan(final_model) 
 
-ols_plot_resid_stud(final_model) # Outlier exist
+# Check for outliers
+ols_plot_resid_stud(final_model) 
+
+par(mfrow = c(2,2))
+plot(final_model)
 ```
 
-Based on the rainbow test on our model, the linearity assumption is not violated, as the null hypothesis of a linear fit is not rejected (p > 0.05). However, the results of a Shapiro test on the residuals between our final model and training data conclude they are not normal, as p < 0.05 here. On the other hand, the results of a shapiro test on the residuals between our final model and the testing data conclude that the residuals for our testing are normal as p = 0.605 > 0.05. Heteroscedasticity is also present in the residuals, as is an outlier. It may
-be an extreme value from our train data set.Thus, the assumptions on residuals of regression models on train data to be normal do not hold.
+The Shapiro test performed on the residuals of our optimized model and training data indicates that they deviate from normality, as the p-value is less than 0.05. Conversely, when applying the Shapiro test to the residuals of our optimized model and testing data, we find that the residuals for the testing data follow a normal distribution, as the p-value (0.7865) is greater than 0.05. Utilizing the rainbow test on our optimized model, we find no evidence of violating the linearity assumption. The null hypothesis of a linear fit is not rejected, as the p-value (0.9892) is greater than 0.05. The test for multicollinearity results in GVIFs lower than 5 for all variables, indicating the absence of multicollinearity. According to the Durban-Watson test for autocorrelation, we can confidently assume that the residuals are not correlated with one another, given the p-value exceeding 0.05. The Breusch Pagan test for heteroskedasticity reveals a violation of the equal variance assumption in our optimized model, as the p-value is less than 0.05. Moreover, upon observing the Studentized Residuals plot, it becomes evident that there is an outlier present. This outlier is observed in our training data but not in our testing data.
 
 
 ## Part (d)
@@ -371,9 +321,7 @@ if (p_value < 0.1) {
 }
 ```
 
-
 The Shaprio test reveals a deviation from normal distribution in Al, as evidenced by a p-value below 0.05. Consequently, a t-test comparing the means of the two groups cannot be conducted due to the non-normality. However, the two groups are independent and exhibit variances that are not significantly dissimilar, as indicated by an F test p-value exceeding 0.05. Thus, it is appropriate to employ a non-parametric test like the Wilcoxon-Mann-Whitney test to compare the medians of the two groups. Employing a 10% level of significance, the distributions of the two groups, WinF and WinNF, are markedly distinct since the p-value for the Wilcoxon test is significantly below 0.05.
-
 
 
 ## Part (e):
@@ -400,19 +348,16 @@ coef <- summary(final_model)$coefficients
 Si <- e + coef[1] + coef[2]*Na + coef[3]*Mg + coef[4]*Al + coef[5]*K + 
   coef[6]*Ca + coef[7]*Ba + coef[8]*Fe
 
-summary(Si)
-
 simulated_glass <- cbind(Na, Mg, Al, K, Ca, Ba, Fe, Si)
 simulated_glass <- as.data.frame(simulated_glass)
-```
-As we can see, the Si contents that we predicted using the simulation method
-have the range between 65.79 and 80.43. The median value of our simulation 
-predict Si is 72.43 while the mean is 72.56. The interquartile range of the 
-simulation predicted Si value is 74.44 - 71.00  = 3.44. 
 
-We choose to use normal distribution method to generate the simulated data 
-for all the independent variables because our train data is approximately
-normally distributed. 
+summary(Si)
+```
+
+Using the mean and standard deviation of each observed variable, we generated simulated data for each variable. Given that our observed data is approximately normally distributed, we opted to employ the normal distribution method for generating the simulated data for all the independent variables.
+
+Upon examination, we observed that the simulated Si values range from 65.79 to 80.43. The median value of our simulated Si data is 72.43, with a mean of 72.56. In comparison, the observed data has a median of 72.79 and a mean of 75.65. The interquartile range of the simulated Si values falls within 71.00 to 74.44.
+
 
 ```{r}
 set.seed(123)
@@ -427,47 +372,50 @@ predictions <- glass_model3 %>% predict(test.data)
 sim_model_results <- data.frame( R2 = R2(predictions, test.data$Si),
             RMSE = RMSE(predictions, test.data$Si),
             MAE = MAE(predictions, test.data$Si))
+
 sim_model_results
-
-
-# sim_model <- lm(y ~ Na + Mg + Al + K + Ca + Ba + Fe)
 summary(sim_model)
 ```
 Simulated Model Regression equation:
 
 $$
 \begin{aligned}
-\Large Si &= \Large  99.01 - (0.96 \cdot Na) - (0.99\cdot Mg) - (0.994 \cdot Al) \\ &- \Large (1.13 \cdot K) - (0.97 \cdot Ca) - (0.77 \cdot Ba) + (1.3 \cdot Fe)
+\Large Si &= \Large  99.01 - (0.96 \cdot Na) - (0.99\cdot Mg) - (0.99 \cdot Al) \\ &- \Large (1.13 \cdot K) - (0.97 \cdot Ca) - (0.77 \cdot Ba) + (1.29 \cdot Fe)
 \end{aligned}
 $$
 
-This regression equation suggests that when none of the critical elements are present in the glass, 98.82% of the material will be Si. The negative slopes in the equation means that an increase of the presence of any other element by one percent will decrease the Si content of the glass by roughly one percent, which makes sense. 
+This regression equation suggests that when none of the critical elements are present in the glass, 99.01% of the material will be Si. The negative slopes in the equation means that an increase of the presence of any other element by one percent will decrease the Si content of the glass by roughly one percent, which makes sense. 
 
-It is clearly to see that our simulated regression has completely different coefficients
-for iron where for every one percent of increase in iron, the percentage of materials
-that are silicon in the glass will increases by 1.3%. (Certain chemical properties?)
+It is clearly to see that our simulated regression has completely different coefficients for iron where for every one percent of increase in iron, the percentage of materials that are silicon in the glass will increases by 1.3%. (Certain chemical properties?)
 
 ```{r}
-# Check for Linearity of glass_model3 using rainbow test
-raintest(sim_model)
-
-# Check for normality of glass_model3 using shapiro test on residuals
+# Check for normality using shapiro test on residuals
 sim_resid <- residuals(sim_model)
 shapiro.test(sim_resid) 
 
-# Check for multicollinearity
+# Check for Linearity using rainbow test
+raintest(sim_model)
+
+# Check for multicollinearity 
+cat("Check for multicollinearity\n\n")
 vif(sim_model)
  
+# Check for autocorrelation 
 dwtest(sim_model)
 
+# Check for Heteroskedasticity
 ols_test_breusch_pagan(sim_model) 
 
-ols_plot_resid_stud(sim_model) # OUTLIER!!!!
+# Check for outliers
+ols_plot_resid_stud(sim_model) 
+
+par(mfrow = c(2,2))
+plot(sim_model)
 ```
-Based on the rainbow test on our model, the linearity assumption is not violated, as the null hypothesis of a linear fit is not rejected (p > 0.05). The result of a Shapiro test on the residuals between the predictions of our simulated model and simulated data conclude that they are normal, as p > 0.05.  It may be an extreme value from our train data set.Thus, the assumptions on residuals between simulated data and real data are normally distributed do not hold. 
 
+The Shapiro test conducted on the residuals of our simulated model and simulated data indicates that they follow a normal distribution, as the p-value is greater than 0.05. By performing the rainbow test on our simulated model, we find no evidence of violating the assumption of linearity. The null hypothesis of a linear fit is not rejected, as the p-value is greater than 0.05. The test for multicollinearity yields GVIFs less than 5 for all variables, suggesting the absence of multicollinearity. According to the Durban-Watson test for autocorrelation, we can safely assume that the residuals are not correlated with each other, given the p-value greater than 0.05. The Breusch Pagan test for heteroskedasticity indicates that the equal variance assumption holds in our simulated model. Upon examination of the Studentized Residuals plot, there is no clear evidence of outliers present in the residuals of our simulated model.
 
-
+Upon comparing the residuals of our optimized model to those of the simulated model, we observe that all assumptions remain consistent, except for the fact that our simulated data follows a normal distribution. This outcome aligns with expectations, as the simulated data was intentionally generated to adhere to a normal distribution.
 
 # Problem 3
 
