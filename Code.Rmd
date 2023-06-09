@@ -29,7 +29,7 @@ By utilizing the glass identification dataset graciously provided by the USA For
 
 # Problem 1
 
-## Part(a)
+## Part (a):
 
 ```{r include=FALSE, echo=FALSE}
 glass <- read.csv("glass.csv")
@@ -73,7 +73,7 @@ To visualize the relationship between two numerical variables and illustrate the
 
 Based on our visualization, it is evident that there exists a moderately negative correlation between Si and RI across all glass types, except for container glass, which surprisingly exhibits a moderately positive correlation. This peculiar pattern may be attributed to the elevated presence of water-insoluble oxides in container glass, contributing to enhanced chemical durability against water, a crucial requirement for storing beverages and food. Another noteworthy observation is that the refractive index tends to cluster around 0 for all glass types. This indicates that light passing through the glass travels at a velocity equal to that in a vacuum, exhibiting no bending or refraction. Such consistency around the refractive index of 0 appears to be a desirable characteristic across all glass types. While the majority of glass types exhibit a RI range between -5 and 5, it is worth noting that building windows display the widest RI range, with float glass spanning from -5 to 10 and non-float glass ranging from -5 to 15. On the other hand, vehicle glass demonstrates the smallest RI range, spreading from -2 to 4. In terms of Si concentration, tableware stands out with the highest Si content compared to other glass types, whereas building windows (non-float glass) generally possess the lowest Si concentration. Additionally, tableware showcases the most significant decline in Si per unit decrease in RI, indicating a steep relationship between these variables.
 
-## Part (b) 
+## Part (b): 
 
 ```{r}
 # We will first check for the normality of dependent variable
@@ -214,7 +214,7 @@ print(model_kable)
 We took our best model (Model 3) and used the coefficients from that model to create an optimized model with a slightly higher coefficient of determination and lower prediction error than our best non-optimized model (RMSE dropped from 0.075 to 0.072). Using the dependent variables from Model 3, the optimized model selected coefficients that minimizes the prediction error of Si from our training data.
 
 
-## Part (c) 
+## Part (c):
 
 * (i) Coefficient of determination
 
@@ -281,7 +281,7 @@ plot(final_model)
 The Shapiro test performed on the residuals of our optimized model and training data indicates that they deviate from normality, as the p-value is less than 0.05. Conversely, when applying the Shapiro test to the residuals of our optimized model and testing data, we find that the residuals for the testing data follow a normal distribution, as the p-value (0.7865) is greater than 0.05. Utilizing the rainbow test on our optimized model, we find no evidence of violating the linearity assumption. The null hypothesis of a linear fit is not rejected, as the p-value (0.9892) is greater than 0.05. The test for multicollinearity results in GVIFs lower than 5 for all variables, indicating the absence of multicollinearity. According to the Durban-Watson test for autocorrelation, we can confidently assume that the residuals are not correlated with one another, given the p-value exceeding 0.05. The Breusch Pagan test for heteroskedasticity reveals a violation of the equal variance assumption in our optimized model, as the p-value is less than 0.05. Moreover, upon observing the Studentized Residuals plot, it becomes evident that there is an outlier present. This outlier is observed in our training data but not in our testing data.
 
 
-## Part (d)
+## Part (d):
 ```{r}
 
 glass_mutate <- glass %>%
@@ -420,7 +420,7 @@ Upon comparing the residuals of our optimized model to those of the simulated mo
 
 # Problem 3
 
-## Part (a)
+## Part (a):
 ```{r include=FALSE, echo=FALSE}
 Handout1 <- read.csv("Handout 1.csv")
 ```
@@ -501,10 +501,9 @@ con_matx
 
 After examining the confusion matrix, it becomes apparent that our model attained an accuracy rate of 80% (95% CI: 0.61-0.92) when tested on the data. As the p-value exceeds 0.05, this suggests that our model exhibits a statistically significant level of accuracy.
 
-## Part (b)
+## Part (b):
 
 Our objective is to optimize the cost function in order to identify the most economical approach for fulfilling the Christmas order. This entails striving for the lowest cost per day to achieve maximum cost efficiency. By minimizing expenses at each factory, we can ensure a cost-effective process for meeting the demands of the Christmas order.
-
 
 ```{r}
 factories <- c("Factory A", "Factory B", "Factory C")
@@ -580,7 +579,7 @@ cat("The summary of the results:")
 print(result_df)
 ```
 
-## Part (c)
+## Part (c):
 
 ```{r}
 # Weibull statistics
