@@ -140,11 +140,11 @@ print(model_kable)
 
 
 
-To select our best model, we first created a model using all the variables except Si. Our second model was selected based on the variables we chose for our visualization, as we saw noticeable correlation between the RI and Si content of glass. The final model had all the significant predictor variables from model 1, which happened to be all the other elements. We also used the training and testing method to create model 3 with 75% training data and 25% testing data.
+To determine our best model, we followed a multi-step process. Initially, we constructed a model using all variables except Si. Subsequently, we identified a second model based on variables chosen for visualization, as we observed a noticeable correlation between RI and Si content in the glass. The final model incorporated significant predictor variables from the first model, encompassing all other elements. We also employed a training and testing approach, utilizing 75% of the data for training and 25% for testing, to create model 3.
 
-We chose Model 3 as our best model since it had the highest R^2 and the lowest RMSE. The R^2 value of 0.993 suggests that 99.3% of the variation of Si in our data could be explained by the independent variables while the RMSE value of 0.075 is lower than those of our other two models. This lower prediction error means a higher accuracy of prediction on the test data and thus a model that could more effectively predict the percentage of Si in glass with low margins of error.
+After evaluating the models, we selected Model 3 as our best model due to its highest $R^2$ value and lowest RMSE. The $R^2$ value of 0.993 indicates that approximately 99.3% of the variation in Si content can be explained by the independent variables. Moreover, the RMSE value of 0.075 is lower than that of the other two models, signifying a higher accuracy of prediction on the test data. Thus, model 3 exhibits superior predictive capabilities, offering more precise estimations of the Si percentage in glass with minimal margin of error.
 
-From the Shapiro Test on the Si data, we obtained a p value significantly less than 0.05. This suggests a non-normal distribution of Si. Before creating our models, we attempted multiple types of transformations, including square root, logarithmic, and boxcox. While some of these transformations raised the p value of the Shapiro Test, none were successful in creating  normally-distributed data. However, since a histogram of the data appears as a bell curve, and the box plot of the data appears normal as well, we decided to create our models despite this inconvenience, and the best model we selected yields great predictive power regardless. 
+We conducted a Shapiro Test on the Si data and obtained a p-value significantly lower than 0.05, indicating a departure from normal distribution. Although we attempted various transformations, including square root, logarithmic, and boxcox, none successfully yielded normally-distributed data, despite some transformations slightly improving the p-value in the Shapiro Test. However, since the histogram of the data displayed a bell curve shape and the box plot appeared approximately normal, we proceeded with building our models despite the non-normality. Ultimately, the selected best model demonstrated excellent predictive power regardless of the non-normality issue. 
 
 
 ```{r}
@@ -162,15 +162,15 @@ result <- optim(par = c(98, -1, -1, -1, -1, -1, -1, 0.5),
 
 ```{r, results = 'asis', echo=FALSE}
 coeff_results <- as.data.frame(rbind(glass_model3$coefficients, result$par))
-row.names(coeff_results) <- c("Model 3", "Optimized Model 3")
+row.names(coeff_results) <- c("Model 3", "Model 3 Optimized")
 
 model_kable <- kable(coeff_results, 
-                    caption = "Summary of the coeffcients between our best model and our optimized model.",
-                    format = "latex",
-                    align = "c",
-                    booktabs = TRUE,
-                    row.names = TRUE) %>%
-  kable_styling(full_width = FALSE, latex_options = "HOLD_position", "scale_down")
+                   caption = "Summary of the coeffcients between our best model and our optimized model.",
+                   format = "latex",
+                   align = "c",
+                   booktabs = TRUE,
+                   row.names = TRUE) %>%
+  kable_styling(full_width = FALSE, latex_options = c("scale_down", "HOLD_position"))
 print(model_kable)
 ```
 
