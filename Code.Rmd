@@ -227,6 +227,7 @@ min.RSS <- function(data, par) {
                               + par[5] * K + par[6] * Ca + par[7] * Ba + par[8] * Fe - Si)^2))
 }
 
+
 result <- optim(par = c(98, -1, -1, -1, -1, -1, -1, 0.5), 
                 fn = min.RSS, 
                 data = train.data)
@@ -243,6 +244,7 @@ final_model <- lm(Si ~ Na + Mg + Al + K + Ca + Ba + Fe, data = train.data)
 # Extract the optimized coefficients
 optimized_coefficients <- result$par
 
+names(optimized_coefficients) <- c("(Intercept)" ,"Na","Mg","Al","K","Ca","Ba","Fe")
 # Update the coefficients of the final model with the optimized coefficients
 final_model$coefficients <- optimized_coefficients
 
@@ -252,6 +254,8 @@ final_model_results <- data.frame( R2 = R2(predictions, test.data$Si),
             RMSE = RMSE(predictions, test.data$Si),
             MAE = MAE(predictions, test.data$Si))
 final_model_results
+
+
 ```
 
 
@@ -262,25 +266,25 @@ final_model_results
 * (i) Coefficient of determination
 
 ```{r}
-RMSE <- model3_results[1]
+RMSE <- final_model_results[1]
 RMSE
 ```
 
-The coefficient of determination, also known as R-squared, is a metric used in regression analysis to evaluate how well a model fits the data. It indicates the proportion of the dependent variable's variability that can be explained by the independent variables. R-squared ranges from 0 to 1, where 0 signifies that the independent variables have no influence on the variation, and 1 means they explain all of it. Our best model had an impressive R-squared value of 0.9930, indicating that 99.30% of the dependent variable's variance is captured by the independent variables.
+The coefficient of determination, also known as R-squared, is a metric used in regression analysis to evaluate how well a model fits the data. It indicates the proportion of the dependent variable's variability that can be explained by the independent variables. R-squared ranges from 0 to 1, where 0 signifies that the independent variables have no influence on the variation, and 1 means they explain all of it. Our best model had an impressive R-squared value of 0.9930, after we optimized our model from a R-sqaured value of 0.9935,indicating that 99.35% of the dependent variable's variance is captured by the independent variables.
 
 
 
 * (ii) Least-squares estimates for the regression line
 
 ```{r}
-summary(glass_model3)
+summary(final_model)
 ```
 
 Regression equation:
 
 $$
 \begin{aligned}
-\Large Si &= \Large  98.81 - (0.94 \cdot Na) - (0.99 \cdot Mg) - (1.00 \cdot Al) \\ &- \Large (0.98 \cdot K) - (0.98 \cdot Ca) - (0.96 \cdot Ba) - (0.35 \cdot Fe)
+\Large Si &= \Large  99.38 - (0.98 \cdot Na) - (0.99 \cdot Mg) - (1.00 \cdot Al) \\ &- \Large (1.00 \cdot K) - (0.98 \cdot Ca) - (0.96 \cdot Ba) - (0.38 \cdot Fe)
 \end{aligned}
 $$
 
@@ -295,22 +299,18 @@ All of the variables in our best model are significant predictors of Si content 
 
 
 * (iv) Residual analysis 
-
-  - the four tests
-  - four plots group together
-  
 ```{r}
 par(mfrow = c(2,2))
-plot(glass_model3)
+plot(final_model)
 
 # Check for Linearity of glass_model3 using rainbow test
-raintest(glass_model3)
+raintest(final_model)
 
 
 
 # Check for normality of glass_model3 using shapiro test on residuals
 # (This predicts residuals on training data)
-real_resid <- residuals(glass_model3)
+real_resid <- residuals(final_model)
 shapiro.test(real_resid) # violated 
 
 # (This predicts residuals on TESTING data)
@@ -318,20 +318,20 @@ resids <- test.data$Si - predictions # This is what we want!
 shapiro.test(resids) 
 
 # Check for multicollinearity 
-vif(glass_model3)
+vif(final_model)
  
-dwtest(glass_model3)
+dwtest(final_model)
 
-ols_test_breusch_pagan(glass_model3) # violated
+ols_test_breusch_pagan(final_model) # violated
 
-ols_plot_resid_stud(glass_model3) # OUTLIER!!!!
+ols_plot_resid_stud(final_model) # Outlier exist
 ```
 
-Based on the rainbow test on our model, the linearity assumption is not violated, as the null hypothesis of a linear fit is not rejected (p > 0.05). However, the results of a Shapiro test on the residuals of the model conclude they are not normal, as p < 0.05 here. Heteroscedasticity is also present in the residuals, as is an outlier. Thus, the assumptions on residuals of regression models to be normal do not hold.
+Based on the rainbow test on our model, the linearity assumption is not violated, as the null hypothesis of a linear fit is not rejected (p > 0.05). However, the results of a Shapiro test on the residuals between our final model and training data conclude they are not normal, as p < 0.05 here. On the other hand, the results of a shapiro test on the residuals between our final model and the testing data conclude that the residuals for our testing are normal as p = 0.605 > 0.05. Heteroscedasticity is also present in the residuals, as is an outlier. It may
+be an extreme value from our train data set.Thus, the assumptions on residuals of regression models on train data to be normal do not hold.
 
 
 ## Part (d)
-
 ```{r}
 
 glass_mutate <- glass %>%
@@ -395,7 +395,7 @@ Fe <- rnorm(n=N, mean = mean(glass$Fe), sd(glass$Fe))
 e <- rnorm(n=N, 0, 1)
 
 # Saves coefficients from our model3 as variables
-coef <- summary(glass_model3)$coefficients
+coef <- summary(final_model)$coefficients
 
 y <- e + coef[1] + coef[2]*Na + coef[3]*Mg + coef[4]*Al + coef[5]*K + 
   coef[6]*Ca + coef[7]*Ba + coef[8]*Fe
@@ -403,8 +403,10 @@ y <- e + coef[1] + coef[2]*Na + coef[3]*Mg + coef[4]*Al + coef[5]*K +
 summary(y)
 
 ```
-
-
+As we can see, the Si contents that we predicted using the simulation method
+have the range between 65.79 and 80.43. The median value of our simulation 
+predict Si is 72.43 while the mean is 72.56. The interquartile range of the 
+simulation predicted Si value is 74.44 - 71.00  = 3.44. 
 
 
 ```{r}
@@ -416,7 +418,7 @@ Simulated Model Regression equation:
 
 $$
 \begin{aligned}
-\Large Si &= \Large  98.32 - (0.89 \cdot Na) - (0.989 \cdot Mg) - (0.993 \cdot Al) \\ &- \Large (1.26 \cdot K) - (0.98 \cdot Ca) - (0.805 \cdot Ba) + (1.05 \cdot Fe)
+\Large Si &= \Large  98.82 - (0.93 \cdot Na) - (0.99 \cdot Mg) - (1.00 \cdot Al) \\ &- \Large (1.14 \cdot K) - (0.98 \cdot Ca) - (0.79 \cdot Ba) + (1.01 \cdot Fe)
 \end{aligned}
 $$
 
@@ -424,7 +426,7 @@ This regression equation suggests that when none of the critical elements are pr
 
 It is clearly to see that our simulated regression has completely different coefficients
 for iron where for every one percent of increase in iron, the percentage of materials
-that are silicon in the glass will increases by 1.05%. (Certain chemical properties?)
+that are silicon in the glass will increases by 1.01%. (Certain chemical properties?)
 
 ```{r}
 # Check for Linearity of glass_model3 using rainbow test
