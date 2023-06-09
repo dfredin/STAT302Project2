@@ -307,7 +307,6 @@ plot(final_model)
 raintest(final_model)
 
 
-
 # Check for normality of glass_model3 using shapiro test on residuals
 # (This predicts residuals on training data)
 real_resid <- residuals(final_model)
@@ -392,41 +391,61 @@ Ca <- rnorm(n=N, mean = mean(glass$Ca), sd(glass$Ca))
 Ba <- rnorm(n=N, mean = mean(glass$Ba), sd(glass$Ba))
 Fe <- rnorm(n=N, mean = mean(glass$Fe), sd(glass$Fe))
 
+
 e <- rnorm(n=N, 0, 1)
 
 # Saves coefficients from our model3 as variables
 coef <- summary(final_model)$coefficients
 
-y <- e + coef[1] + coef[2]*Na + coef[3]*Mg + coef[4]*Al + coef[5]*K + 
+Si <- e + coef[1] + coef[2]*Na + coef[3]*Mg + coef[4]*Al + coef[5]*K + 
   coef[6]*Ca + coef[7]*Ba + coef[8]*Fe
 
-summary(y)
+summary(Si)
 
+simulated_glass <- cbind(Na, Mg, Al, K, Ca, Ba, Fe, Si)
+simulated_glass <- as.data.frame(simulated_glass)
 ```
 As we can see, the Si contents that we predicted using the simulation method
 have the range between 65.79 and 80.43. The median value of our simulation 
 predict Si is 72.43 while the mean is 72.56. The interquartile range of the 
 simulation predicted Si value is 74.44 - 71.00  = 3.44. 
 
+We choose to use normal distribution method to generate the simulated data 
+for all the independent variables because our train data is approximately
+normally distributed. 
 
 ```{r}
-# Simulated model
-sim_model <- lm(y ~ Na + Mg + Al + K + Ca + Ba + Fe)
+set.seed(123)
+# Simulated model using the technique 
+training <- simulated_glass$Si %>%
+    createDataPartition(p = .75, list = FALSE)
+train.data  <- simulated_glass[training, ]
+test.data <- simulated_glass[-training, ]
+
+sim_model<- lm(Si ~ Na + Mg + Al + K + Ca + Ba + Fe, data = train.data)
+predictions <- glass_model3 %>% predict(test.data)
+sim_model_results <- data.frame( R2 = R2(predictions, test.data$Si),
+            RMSE = RMSE(predictions, test.data$Si),
+            MAE = MAE(predictions, test.data$Si))
+sim_model_results
+
+
+# sim_model <- lm(y ~ Na + Mg + Al + K + Ca + Ba + Fe)
 summary(sim_model)
 ```
 Simulated Model Regression equation:
 
 $$
 \begin{aligned}
-\Large Si &= \Large  98.82 - (0.93 \cdot Na) - (0.99 \cdot Mg) - (1.00 \cdot Al) \\ &- \Large (1.14 \cdot K) - (0.98 \cdot Ca) - (0.79 \cdot Ba) + (1.01 \cdot Fe)
+\Large Si &= \Large  99.01 - (0.96 \cdot Na) - (0.99\cdot Mg) - (0.994 \cdot Al) \\ &- \Large (1.13 \cdot K) - (0.97 \cdot Ca) - (0.77 \cdot Ba) + (1.3 \cdot Fe)
 \end{aligned}
 $$
 
-This regression equation suggests that when none of the critical elements are present in the glass, 98.32% of the material will be Si. The negative slopes in the equation means that an increase of the presence of any other element by one percent will decrease the Si content of the glass by roughly one percent, which makes sense. 
+This regression equation suggests that when none of the critical elements are present in the glass, 98.82% of the material will be Si. The negative slopes in the equation means that an increase of the presence of any other element by one percent will decrease the Si content of the glass by roughly one percent, which makes sense. 
 
 It is clearly to see that our simulated regression has completely different coefficients
 for iron where for every one percent of increase in iron, the percentage of materials
-that are silicon in the glass will increases by 1.01%. (Certain chemical properties?)
+that are silicon in the glass will increases by 1.3%. (Certain chemical properties?)
 
 ```{r}
 # Check for Linearity of glass_model3 using rainbow test
@@ -434,23 +453,18 @@ raintest(sim_model)
 
 # Check for normality of glass_model3 using shapiro test on residuals
 sim_resid <- residuals(sim_model)
-
-shapiro.test(sim_resid) # violated
+shapiro.test(sim_resid) 
 
 # Check for multicollinearity
 vif(sim_model)
  
 dwtest(sim_model)
 
-ols_test_breusch_pagan(sim_model) # violated
+ols_test_breusch_pagan(sim_model) 
 
 ols_plot_resid_stud(sim_model) # OUTLIER!!!!
 ```
-
-
-
-
-
+Based on the rainbow test on our model, the linearity assumption is not violated, as the null hypothesis of a linear fit is not rejected (p > 0.05). The result of a Shapiro test on the residuals between the predictions of our simulated model and simulated data conclude that they are normal, as p > 0.05.  It may be an extreme value from our train data set.Thus, the assumptions on residuals between simulated data and real data are normally distributed do not hold. 
 
 
 
