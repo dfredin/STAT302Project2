@@ -81,6 +81,18 @@ shapiro.test(glass$Si)
 boxplot(glass$Si, main = "Normality check for Silicon")
 ```
 
+```{r}
+# Normal distribution plotted over histogram
+h <- hist(glass$Si, breaks = 10, density = 10,
+          col = "blue", xlab = "Si", main = "Distribution of Si") 
+xfit <- seq(min(glass$Si), max(glass$Si), length = 40) 
+yfit <- dnorm(xfit, mean = mean(glass$Si), sd = sd(glass$Si)) 
+yfit <- yfit * diff(h$mids[1:2]) * length(glass$Si) 
+
+lines(xfit, yfit, col = "black", lwd = 2)
+
+```
+
 ```{r} 
 set.seed(123)
 
